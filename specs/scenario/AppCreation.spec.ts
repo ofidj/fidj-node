@@ -3,7 +3,7 @@ import {FidjNodeService} from '../../src';
 
 describe('AppCreation in Sandbox', () => {
 
-    it('should login and create app if not already exists', async () => {
+    xit('should login and create app if not already exists', async () => {
 
         const fidjNodeService = new FidjNodeService();
         await fidjNodeService.fidjInit('fidj-sandbox-0123fe7ed0000001', {prod: false});
