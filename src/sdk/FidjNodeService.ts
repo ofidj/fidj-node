@@ -1,7 +1,7 @@
 // import PouchDB from 'pouchdb';
 // import * as PouchDB from 'pouchdb/dist/pouchdb.js';
 // import PouchDB from 'pouchdb/dist/pouchdb.js';
-import {fidj} from '../module';
+import {Fidj} from '../module';
 import * as tools from '../tools';
 import * as connection from '../connection';
 import {Ajax, ClientTokens, ClientUser} from '../connection';
@@ -44,7 +44,7 @@ export class FidjNodeService {
 
         this.sdk = {
             org: 'fidj',
-            version: fidj.version.substring(1),
+            version: Fidj.version.substring(1),
             prod: false,
             useDB: true
         };
@@ -67,6 +67,35 @@ export class FidjNodeService {
         this.storage = new tools.LocalStorage('fidj.');
         this.session = new session.Session();
         this.connection = new connection.Connection(this.sdk, this.storage, this.logger);
+    }
+
+
+    static IsJWTExpired(payload: any): boolean {
+        if (!payload.exp) {
+            return true;
+        }
+
+        const now = new Date();
+        const expDate = new Date(payload.exp * 1000);
+        return (expDate.getTime() < now.getTime());
+    }
+
+    static NameFromPayload(payload: any): string {
+        return payload?.name;
+    }
+
+    static RolesFromPayload(payload: any): string[] {
+        let roles = [];
+        try {
+            roles = [].concat(payload.roles);
+        } catch (ignored) {
+        }
+
+        return roles;
+    }
+
+    static AppIdFromPayload(payload: any): string {
+        return payload?.aud;
     }
 
     /**

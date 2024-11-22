@@ -11,7 +11,7 @@ describe('AppCreation in Sandbox', () => {
         const clientUser = await fidjNodeService.fidjLogin('test', 'test');
         expect(clientUser.username).equal('test');
         expect(clientUser.roles.length).equal(1);
-        expect(JSON.stringify(clientUser.roles[0])).equal('{"roles":["Free"]}');
+        expect(clientUser.roles[0]).equal('Free');
 
         const app = {title: 'test'};
         let createdApp = {app};
