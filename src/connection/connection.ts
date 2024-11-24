@@ -283,9 +283,6 @@ export class Connection {
      */
     async refreshConnection(): Promise<ClientUser> {
 
-        // store states
-        this._storage.set(Connection._states, this.states);
-
         // token not expired : ok
         if (this.accessToken) {
             const payload = this.accessToken.split('.')[1];
@@ -423,7 +420,7 @@ export class Connection {
             }
         }
 
-        this._logger.log('fidj.sdk.connection.getApiEndpoints : ', ea);
+        this._logger.log('fidj.sdk.connection.getApiEndpoints : ', ea, this.states);
 
         let couldCheckStates = true;
         if (this.states && Object.keys(this.states).length) {
@@ -436,7 +433,7 @@ export class Connection {
             couldCheckStates = false;
         }
 
-        if (options && options.filter) {
+        if (options?.filter) {
             if (couldCheckStates && options.filter === 'theBestOne') {
                 for (let i = 0; (i < ea.length) && (filteredEa.length === 0); i++) {
                     const endpoint = ea[i];
@@ -537,7 +534,7 @@ export class Connection {
 
         // verify via GET status on Endpoints & DBs
         const promises = [];
-        // this.states = {};
+        this.states = {};
         this.apis = await this.getApiEndpoints();
         for (const api of this.apis) {
             let endpointUrl: string = api.url;
@@ -585,6 +582,9 @@ export class Connection {
             }
             this.states[endpointUrl] = {state: false, time: currentTime, lastTimeWasOk: lastTimeWasOk};
         }
+
+        // store states
+        this._storage.set(Connection._states, this.states);
     }
 
     private async verifyDbState(currentTime: number, dbEndpoint: string) {
@@ -609,6 +609,9 @@ export class Connection {
             this.states[dbEndpoint] = {state: false, time: currentTime, lastTimeWasOk: lastTimeWasOk};
             // resolve();
         }
+
+        // store states
+        this._storage.set(Connection._states, this.states);
     }
 
 }
