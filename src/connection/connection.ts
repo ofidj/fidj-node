@@ -560,11 +560,10 @@ export class Connection {
 
             this._logger.log('fidj.sdk.connection.verifyApiState : ', currentTime, endpointUrl);
 
-            const data = await new Ajax()
-                .get({
-                    url: endpointUrl + '/status?isOk=' + this._sdk.version,
-                    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
-                });
+            const data = (await new Ajax().get({
+                url: endpointUrl + '/status?isOk=' + this._sdk.version,
+                headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+            })).data;
 
             let state = false;
             if (data && data.isOk) {
@@ -591,11 +590,10 @@ export class Connection {
 
         try {
             // console.log('verifyDbState: ', dbEndpoint);
-            await new Ajax()
-                .get({
-                    url: dbEndpoint,
-                    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
-                });
+            await new Ajax().get({
+                url: dbEndpoint,
+                headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+            });
 
             this.states[dbEndpoint] = {state: true, time: currentTime, lastTimeWasOk: currentTime};
             // resolve();

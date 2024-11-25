@@ -31,37 +31,22 @@ export class Ajax {
     private xhr; // : XHRPromise;
 
     constructor() {
-
-        // https://www.twilio.com/blog/2017/08/http-requests-in-node-js.html
-        // axios ?
-        //  https://github.com/axios/axios
-        // const axios = require('axios');
-
-        // axios.get('https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY')
-        //     .then(response => {
-        //         console.log(response.data.url);
-        //         console.log(response.data.explanation);
-        //     })
-
-        // superagent.get('https://api.nasa.gov/planetary/apod')
-        //     .query({ api_key: 'DEMO_KEY', date: '2017-08-02' })
-
-        this.xhr = axios; // require('superagent'); // new XHRPromise();
+        this.xhr = axios;
     };
 
     private static formatResponseData(response: any): any {
-        // TODO switch depending on json headers
-        let dataParsed = response;
-
-        while (dataParsed && dataParsed.data) {
-            dataParsed = dataParsed.data;
+        const status = response?.status ? response.status : 200;
+        let data = response;
+        while (data && typeof data.data !== 'undefined') {
+            data = data.data;
         }
 
         try {
-            dataParsed = JSON.parse(dataParsed + '');
+            data = JSON.parse(response.data);
         } catch (e) {
         }
-        return dataParsed;
+
+        return {status, data};
     };
 
     private static formatError(error: any): XhrErrorInterface {
@@ -119,7 +104,7 @@ export class Ajax {
         return errorFormatted;
     };
 
-    public post(args: XhrOptionsInterface): Promise<any | XhrErrorInterface> {
+    public async post(args: XhrOptionsInterface): Promise<any | XhrErrorInterface> {
 
         const opt: any = {
             method: 'POST',
@@ -149,7 +134,7 @@ export class Ajax {
             });
     }
 
-    public put(args: XhrOptionsInterface): Promise<any | XhrErrorInterface> {
+    public async put(args: XhrOptionsInterface): Promise<any | XhrErrorInterface> {
         const opt: any = {
             method: 'PUT',
             url: args.url,
@@ -178,7 +163,7 @@ export class Ajax {
             });
     }
 
-    public delete(args: XhrOptionsInterface): Promise<any | XhrErrorInterface> {
+    public async delete(args: XhrOptionsInterface): Promise<any | XhrErrorInterface> {
         const opt: any = {
             method: 'DELETE',
             url: args.url,
@@ -206,7 +191,7 @@ export class Ajax {
             });
     }
 
-    public get(args: XhrOptionsInterface): Promise<any | XhrErrorInterface> {
+    public async get(args: XhrOptionsInterface): Promise<any | XhrErrorInterface> {
         const opt: any = {
             method: 'GET',
             url: args.url

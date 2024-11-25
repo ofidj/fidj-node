@@ -515,7 +515,7 @@ export class FidjNodeService {
             });
     };
 
-    public async fidjSendOnEndpoint(input: EndpointCallInterface): Promise<any> {
+    public async fidjSendOnEndpoint(input: EndpointCallInterface): Promise<{ data: any, status: number }> {
         const filter: EndpointFilterInterface = input.key ? {key: input.key} : null;
         const endpoints = await this.fidjGetEndpoints(filter);
         if (!input.defaultKeyUrl && (!endpoints || endpoints.length !== 1)) {
@@ -527,7 +527,7 @@ export class FidjNodeService {
             firstEndpointUrl = urlJoin(firstEndpointUrl, input.relativePath);
         }
         const jwt = await this.connection.getIdToken();
-        let answer;
+        let answer: any;
         const query = new Ajax();
         switch (input.verb) {
             case 'POST' :

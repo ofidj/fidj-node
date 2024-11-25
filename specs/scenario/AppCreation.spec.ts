@@ -17,11 +17,11 @@ describe('AppCreation in Sandbox', () => {
         let createdApp = {app};
         try {
             // create
-            createdApp = await fidjNodeService.fidjSendOnEndpoint({
+            createdApp = (await fidjNodeService.fidjSendOnEndpoint({
                 verb: 'POST',
                 key: 'apps',
                 data: app,
-            });
+            })).data;
         } catch (e) {
             // or already created
             expect(e.code).equal(400);
