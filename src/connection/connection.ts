@@ -281,7 +281,11 @@ export class Connection {
     /**
      * @throws ErrorInterface
      */
-    async refreshConnection(): Promise<ClientUser> {
+    async refreshConnection(force = false) {
+
+        if (force) {
+            this.removingCurrentTokens();
+        }
 
         // token not expired : ok
         if (this.accessToken) {
@@ -291,7 +295,7 @@ export class Connection {
             // console.log('new Date().getTime() < JSON.parse(decoded).exp :', (new Date().getTime() / 1000), JSON.parse(decoded).exp);
             this._logger.log('fidj.connection.connection.refreshConnection : token not expired ? ', notExpired);
             if (notExpired) {
-                return Promise.resolve(this.getUser());
+                return this.updatedClientTokens();
             }
         }
 
@@ -307,12 +311,7 @@ export class Connection {
         }
 
         // remove expired accessToken & idToken & store it as Previous one
-        this.accessTokenPrevious = this.accessToken;
-        this._storage.set('v2.accessTokenPrevious', this.accessTokenPrevious);
-        this._storage.remove(Connection._accessToken);
-        this._storage.remove(Connection._idToken);
-        this.accessToken = null;
-        this.idToken = null;
+        this.removingCurrentTokens();
 
         // refresh authentication
         this._logger.log('fidj.connection.connection.refreshConnection : refresh authentication.');
@@ -321,16 +320,17 @@ export class Connection {
             throw new FidjError(400, 'Need an initialized client.');
         }
 
-        const refreshToken: ClientToken = await this.getClient().reAuthenticate(this.refreshToken);
+        const {createdAccessToken, createdIdToken} = await this.client.reAuthenticate(this.refreshToken);
+        this.accessToken = createdAccessToken.data;
+        this.idToken = createdIdToken.data;
 
-        const previousIdToken = new ClientToken(this.getClientId(), 'idToken', this.idToken);
-        const previousAccessToken = new ClientToken(this.getClientId(), 'accessToken', this.accessToken);
-        const clientTokens = new ClientTokens(this.getClientId(), previousIdToken, previousAccessToken, refreshToken);
-        await this.setConnection(clientTokens);
-        return this.getUser();
+        return this.updatedClientTokens();
     };
 
     async setConnection(clientTokens: ClientTokens) {
+        if (!clientTokens) {
+            return;
+        }
 
         // only in private storage
         if (clientTokens.accessToken) {
@@ -553,6 +553,27 @@ export class Connection {
             const verified = await this.verifyDbState(currentTime, dbEndpoint);
         }
     };
+
+    protected async updatedClientTokens() {
+        const accessToken = new ClientToken(this.getClientId(), 'accessToken', this.accessToken);
+        const idToken = new ClientToken(this.getClientId(), 'idToken', this.idToken);
+        const refreshToken = new ClientToken(this.getClientId(), 'refreshToken', this.refreshToken);
+        const clientTokens = new ClientTokens(this.getClientId(), accessToken, idToken, refreshToken);
+        await this.setConnection(clientTokens);
+        return clientTokens;
+    }
+
+    protected removingCurrentTokens() {
+        if (this.accessToken) {
+            this.accessTokenPrevious = this.accessToken;
+            this._storage.set('v2.accessTokenPrevious', this.accessTokenPrevious);
+        }
+
+        this._storage.remove(Connection._accessToken);
+        this._storage.remove(Connection._idToken);
+        this.accessToken = null;
+        this.idToken = null;
+    }
 
     private async verifyApiState(currentTime: number, endpointUrl: string) {
 

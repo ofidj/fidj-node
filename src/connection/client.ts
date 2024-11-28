@@ -2,7 +2,7 @@ import {Ajax} from './ajax';
 import * as tools from '../tools';
 import {LocalStorage} from '../tools';
 import {ErrorInterface, FidjError, LoggerInterface, SdkInterface} from '../sdk';
-import {ClientToken, ClientTokens, ClientUser} from './interfaces';
+import {ClientToken, ClientTokens} from './interfaces';
 
 export class Client {
 
@@ -66,20 +66,20 @@ export class Client {
         }
 
         try {
-            const urlLogin = this.URI + '/users';
+            //  const urlLogin = this.URI + '/users';
+//
+            //  const dataLogin = {
+            //      name: login,
+            //      username: login,
+            //      email: login,
+            //      password: password
+            //  };
 
-            const dataLogin = {
-                name: login,
-                username: login,
-                email: login,
-                password: password
-            };
-
-            const createdUser: ClientUser = (await new Ajax().post({
-                url: urlLogin,
-                data: dataLogin,
-                headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
-            }) as any).data.user;
+            // const createdUser: ClientUser = (await new Ajax().post({
+            //     url: urlLogin,
+            //     data: dataLogin,
+            //     headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+            // }) as any).data.user;
 
             this.setClientId(login); // login or createdUser.id or createdUser._id
             const urlToken = this.URI + '/apps/' + this.appId + '/tokens';
@@ -97,12 +97,11 @@ export class Client {
                 'Content-Type': 'application/json', 'Accept': 'application/json',
                 'Authorization': 'Basic ' + tools.Base64.encode('' + login + ':' + password)
             };
-            let response = (await new Ajax().post({
+            const createdAccessToken: ClientToken = (await new Ajax().post({
                 url: urlToken,
                 data: dataToken,
                 headers
-            })).data;
-            const createdAccessToken: ClientToken = response.token;
+            })).data.token;
 
             dataToken.grant_type = 'id_token';
             const createdIdToken: ClientToken = (await new Ajax().post({
@@ -136,16 +135,16 @@ export class Client {
      * @param refreshToken
      * @throws ErrorInterface
      */
-    public async reAuthenticate(refreshToken: string): Promise<ClientToken> {
+    public async reAuthenticate(refreshToken: string) {
 
         if (!this.URI) {
             console.error('no api uri');
             return Promise.reject({code: 408, reason: 'no-api-uri'});
         }
 
-        const url = this.URI + '/apps/' + this.appId + '/tokens';
-        const data = {
-            grant_type: 'refresh_token',
+        const urlToken = this.URI + '/apps/' + this.appId + '/tokens';
+        const dataToken = {
+            grant_type: 'access_token',
             // client_id: this.clientId,
             client_udid: this.clientUuid,
             client_info: this.clientInfo,
@@ -155,19 +154,29 @@ export class Client {
             refreshCount: Client.refreshCount,
         };
 
-        const clientToken: ClientToken = (await new Ajax().post({
-            url: url,
-            data: data,
+        const createdAccessToken: ClientToken = (await new Ajax().post({
+            url: urlToken,
+            data: dataToken,
             headers: {
                 'Content-Type': 'application/json', 'Accept': 'application/json',
                 'Authorization': 'Bearer ' + refreshToken
             }
-        })).data;
+        })).data.token;
+
+        dataToken.grant_type = 'id_token';
+        const createdIdToken: ClientToken = (await new Ajax().post({
+            url: urlToken,
+            data: dataToken,
+            headers: {
+                'Content-Type': 'application/json', 'Accept': 'application/json',
+                'Authorization': 'Bearer ' + createdAccessToken.data
+            }
+        }) as any).data.token;
 
         Client.refreshCount++;
         this.storage.set(Client._refreshCount, Client.refreshCount);
 
-        return clientToken;
+        return {createdAccessToken, createdIdToken};
     }
 
     public async logout(refreshToken?: string): Promise<void | ErrorInterface> {
@@ -188,10 +197,10 @@ export class Client {
             return Promise.resolve();
         }
 
-        const url = this.URI + '/apps/' + this.appId + '/tokens';
+        const urlToken = this.URI + '/apps/' + this.appId + '/tokens';
 
         return (await new Ajax().delete({
-            url: url,
+            url: urlToken,
             headers: {
                 'Content-Type': 'application/json', 'Accept': 'application/json',
                 'Authorization': 'Bearer ' + refreshToken

@@ -305,15 +305,11 @@ export class FidjNodeService {
             });
     };
 
-    /**
-     * Synchronize DB
-     *
-     *
-     * @param fnInitFirstData a function with db as input and that return promise: call if DB is empty
-     * @param fnInitFirstData_Arg arg to set to fnInitFirstData()
-     * @returns  promise
-     */
-    public async fidjSync(fnInitFirstData?, fnInitFirstData_Arg?): Promise<void | ErrorInterface> {
+    public async fidjSync(options: {
+        forceRefresh: boolean,
+        fnInitFirstData?: (a: any) => Promise<any>,
+        fnInitFirstData_Arg?: any
+    } = {forceRefresh: false}): Promise<void | ErrorInterface> {
         const self = this;
         self.logger.log('fidj.sdk.service.fidjSync');
         // if (!self.session.isReady()) {
@@ -322,7 +318,8 @@ export class FidjNodeService {
 
         if (!self.sdk.useDB) {
             self.logger.log('fidj.sdk.service.fidjSync: you ar not using DB - no sync available.');
-            await self.connection.refreshConnection();
+            const clientTokens = await this.connection.refreshConnection(options.forceRefresh);
+            await this.connection.setConnection(clientTokens);
             return Promise.resolve();
         }
 
@@ -346,8 +343,8 @@ export class FidjNodeService {
                     self.logger.log('fidj.sdk.service.fidjSync isEmpty : ', isEmpty, firstSync);
 
                     return new self.promise((resolveEmpty, rejectEmptyNotUsed) => {
-                        if (isEmpty && firstSync && fnInitFirstData) {
-                            const ret = fnInitFirstData(fnInitFirstData_Arg);
+                        if (isEmpty && firstSync && options.fnInitFirstData) {
+                            const ret = options.fnInitFirstData(options.fnInitFirstData_Arg);
                             if (ret && ret['catch'] instanceof Function) {
                                 ret.then(resolveEmpty).catch(reject);
                             }
@@ -370,7 +367,7 @@ export class FidjNodeService {
                     }
                     self.logger.log('fidj.sdk.service.fidjSync _dbRecordCount : ' + self.session.dbRecordCount);
 
-                    return self.connection.refreshConnection();
+                    return self.connection.refreshConnection(options.forceRefresh);
                 })
                 .then((user) => {
                     self.logger.log('fidj.sdk.service.fidjSync refreshConnection done : ', user);
@@ -632,9 +629,7 @@ export class FidjNodeService {
 
         await this.connection.logout();
 
-        const clientTokens = await this.connection.getClient().login(login, password, updateProperties);
-
-        return clientTokens;
+        return await this.connection.getClient().login(login, password, updateProperties);
     };
 
     private async _createSession(uid: string): Promise<void | ErrorInterface> {

@@ -8,8 +8,8 @@ describe('AppCreation in Sandbox', () => {
         this.timeout(10000);
         const fidjNodeService = new FidjNodeService();
         await fidjNodeService.fidjInit('fidj-sandbox-0123fe7ed0000001', {prod: false});
-        const clientUser = await fidjNodeService.fidjLogin('test', 'test');
-        expect(clientUser.username).equal('test');
+        const clientUser = await fidjNodeService.fidjLogin('test@fidj.ovh', 'test');
+        expect(clientUser.username).equal('test@fidj.ovh');
         expect(clientUser.roles.length).equal(1);
         expect(clientUser.roles[0]).equal('Free');
 
@@ -28,6 +28,13 @@ describe('AppCreation in Sandbox', () => {
             expect(JSON.stringify(e.message)).equal('{"status":"looks you are duplicating one application"}');
         }
         expect(createdApp.app.title).equal('test');
+        const idToken1 = await fidjNodeService.fidjGetIdToken();
+        expect(!!idToken1).eq(true);
+
+        await fidjNodeService.fidjSync({forceRefresh: true});
+
+        const idToken2 = await fidjNodeService.fidjGetIdToken();
+        expect(!!idToken2).eq(true);
 
     });
 
