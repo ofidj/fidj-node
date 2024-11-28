@@ -322,6 +322,7 @@ export class FidjNodeService {
 
         if (!self.sdk.useDB) {
             self.logger.log('fidj.sdk.service.fidjSync: you ar not using DB - no sync available.');
+            await self.connection.refreshConnection();
             return Promise.resolve();
         }
 

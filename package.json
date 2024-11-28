@@ -1,6 +1,6 @@
 {
   "name": "fidj-node",
-  "version": "15.0.16",
+  "version": "15.0.17",
   "author": "fidj",
   "description": "fidj node tools",
   "keywords": [],
@@ -30,6 +30,6 @@
     "build-version": "VERSION=\"$(npm version patch --no-git-tag-version)\" && echo \"export const Fidj = {version: '$VERSION'}\" > ./src/module/fidj.ts",
     "build-dist": "rm -rf dist/ && tsc --project tsconfig.json && cp *.md dist/ && cp package.json dist/",
     "test": "mocha --require ts-node/register 'specs/**/**.spec.ts'",
-    "coverage": "nyc npm run test"
+    "test-coverage": "nyc npm run test"
   }
 }
