@@ -2,7 +2,7 @@ import {Ajax} from './ajax';
 import * as tools from '../tools';
 import {LocalStorage} from '../tools';
 import {ErrorInterface, FidjError, LoggerInterface, SdkInterface} from '../sdk';
-import {ClientToken, ClientTokens} from './interfaces';
+import {ClientToken, ClientTokens, ClientUser} from './interfaces';
 
 export class Client {
 
@@ -66,20 +66,20 @@ export class Client {
         }
 
         try {
-            //  const urlLogin = this.URI + '/users';
-//
-            //  const dataLogin = {
-            //      name: login,
-            //      username: login,
-            //      email: login,
-            //      password: password
-            //  };
+            const urlLogin = this.URI + '/users';
 
-            // const createdUser: ClientUser = (await new Ajax().post({
-            //     url: urlLogin,
-            //     data: dataLogin,
-            //     headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
-            // }) as any).data.user;
+            const dataLogin = {
+                name: login,
+                username: login,
+                email: login,
+                password: password
+            };
+
+            const createdUser: ClientUser = (await new Ajax().post({
+                url: urlLogin,
+                data: dataLogin,
+                headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+            }) as any).data.user;
 
             this.setClientId(login); // login or createdUser.id or createdUser._id
             const urlToken = this.URI + '/apps/' + this.appId + '/tokens';
