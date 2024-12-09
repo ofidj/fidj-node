@@ -2,8 +2,7 @@
 // let PouchDB: any;
 
 // import PouchDB from 'pouchdb/dist/pouchdb.js';
-import {EndpointInterface, ErrorInterface} from '../sdk/Interfaces';
-import {FidjError} from '../sdk';
+import {EndpointInterface, ErrorInterface, FidjError} from '../sdk';
 
 const FidjPouch = null;
 
