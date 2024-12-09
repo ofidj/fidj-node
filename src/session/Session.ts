@@ -6,11 +6,11 @@ import {EndpointInterface, ErrorInterface, FidjError} from '../sdk';
 
 const FidjPouch = null;
 
-if (typeof window !== 'undefined' && typeof require !== 'undefined') {
-    // load cordova adapter : https://github.com/pouchdb-community/pouchdb-adapter-cordova-sqlite/issues/22
-    //  FidjPouch = (window['PouchDB']) ? window['PouchDB'] : require('pouchdb').default; // .default;
-    //  FidjPouch.plugin(require('pouchdb-adapter-cordova-sqlite'));
-}
+// if (typeof window !== 'undefined' && typeof require !== 'undefined') {
+// load cordova adapter : https://github.com/pouchdb-community/pouchdb-adapter-cordova-sqlite/issues/22
+//  FidjPouch = (window['PouchDB']) ? window['PouchDB'] : require('pouchdb').default; // .default;
+//  FidjPouch.plugin(require('pouchdb-adapter-cordova-sqlite'));
+// }
 
 export interface SessionCryptoInterface {
     obj: Object,
