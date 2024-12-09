@@ -1,4 +1,4 @@
 export * from './interfaces';
-export * from './client';
-export * from './ajax';
-export * from './connection';
+export * from './Client';
+export * from './Ajax';
+export * from './Connection';

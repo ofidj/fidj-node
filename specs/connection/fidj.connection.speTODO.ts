@@ -1,7 +1,6 @@
-import {Base64} from '../../src';
-import {LoggerInterface, LoggerLevelEnum} from '../../src';
-import {LoggerService} from '../../src/sdk/logger.service';
-import {Ajax, XhrErrorReason, Client, Connection, ClientTokens, ClientToken, ClientUser} from '../../src/connection';
+import {Base64, LoggerInterface, LoggerLevelEnum} from '../../src';
+import {LoggerService} from '../../src/sdk/LoggerService';
+import {Ajax, Client, ClientToken, ClientTokens, ClientUser, Connection, XhrErrorReason} from '../../src/connection';
 
 describe('fidj.connection', () => {
 
@@ -280,7 +279,7 @@ describe('fidj.connection', () => {
             user = await client.reAuthenticate('refreshToken');
 
             request = jasmine.Ajax.requests.mostRecent();
-            expect(request.url).toBe(_uri + '/apps/'+_appId+'/tokens');
+            expect(request.url).toBe(_uri + '/apps/' + _appId + '/tokens');
             expect(request.method).toBe('POST');
             data = JSON.parse(request.params);
             expect(data.refresh_token).toEqual('refreshToken');
@@ -310,7 +309,7 @@ describe('fidj.connection', () => {
             const ready = client.isReady();
             expect(ready).toBeTruthy();
             const request = jasmine.Ajax.requests.mostRecent();
-            expect(request.url).toBe(_uri + '/apps/'+_appId+'/tokens');
+            expect(request.url).toBe(_uri + '/apps/' + _appId + '/tokens');
             expect(request.method).toBe('DELETE');
             const data: any = JSON.parse(request.params);
             expect(data).toBeNull();
@@ -762,26 +761,26 @@ describe('fidj.connection', () => {
                 reAuthenticate: () => {
                 }
             };
-            spyOn((srv as any).client, 'reAuthenticate').and.returnValue(Promise.resolve(new ClientToken( 'not408', 'refresh_token', 'token')));
+            spyOn((srv as any).client, 'reAuthenticate').and.returnValue(Promise.resolve(new ClientToken('not408', 'refresh_token', 'token')));
             spyOn(srv, 'setConnection').and.returnValue(Promise.resolve());
             spyOn(srv, 'getUser').and.returnValue(new ClientUser('id', 'getUser', [], 'message'));
             spyOn((srv as any)._storage, 'remove').and.returnValue({});
             spyOn((srv as any)._storage, 'set').and.returnValue({});
 
             const user: ClientUser = await srv.refreshConnection();
-                    expect(user.id).toBe('id');
-                    expect((srv as any).client.reAuthenticate).toHaveBeenCalledTimes(1);
-                    expect(srv.setConnection).toHaveBeenCalledTimes(1);
-                    expect(srv.getUser).toHaveBeenCalledTimes(1);
-                    expect(srv.accessToken).toBe(null);
-                    expect(srv.idToken).toBe(null);
-                    expect((srv as any)._storage.remove).toHaveBeenCalledTimes(3);
-                    expect((srv as any)._storage.remove).toHaveBeenCalledWith('v2.accessToken');
-                    expect((srv as any)._storage.remove).toHaveBeenCalledWith('v2.idToken');
-                    expect((srv as any)._storage.remove).toHaveBeenCalledWith('v2.refreshToken');
-                    expect(srv.accessTokenPrevious).toBe(expiredToken);
-                    expect((srv as any)._storage.set).toHaveBeenCalledTimes(2);
-                    expect((srv as any)._storage.set).toHaveBeenCalledWith('v2.accessTokenPrevious', expiredToken);
+            expect(user.id).toBe('id');
+            expect((srv as any).client.reAuthenticate).toHaveBeenCalledTimes(1);
+            expect(srv.setConnection).toHaveBeenCalledTimes(1);
+            expect(srv.getUser).toHaveBeenCalledTimes(1);
+            expect(srv.accessToken).toBe(null);
+            expect(srv.idToken).toBe(null);
+            expect((srv as any)._storage.remove).toHaveBeenCalledTimes(3);
+            expect((srv as any)._storage.remove).toHaveBeenCalledWith('v2.accessToken');
+            expect((srv as any)._storage.remove).toHaveBeenCalledWith('v2.idToken');
+            expect((srv as any)._storage.remove).toHaveBeenCalledWith('v2.refreshToken');
+            expect(srv.accessTokenPrevious).toBe(expiredToken);
+            expect((srv as any)._storage.set).toHaveBeenCalledTimes(2);
+            expect((srv as any)._storage.set).toHaveBeenCalledWith('v2.accessTokenPrevious', expiredToken);
         });
 
         it('should encrypt & decrypt', () => {

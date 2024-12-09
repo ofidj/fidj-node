@@ -25,11 +25,6 @@ class SimpleMemoryStorage implements IStorage {
     }
 }
 
-/**
- * localStorage class factory
- * Usage : var LocalStorage = fidj.LocalStorageFactory(window.localStorage); // to create a new class
- * Usage : var localStorageService = new LocalStorage(); // to create a new instance
- */
 export class LocalStorage {
 
     public version = '0.1';
@@ -52,7 +47,7 @@ export class LocalStorage {
      *              compatible (Numbers, Strings, Objects etc.).
      * @returns the stored value which is a container of user value.
      */
-    set(key: string, value) {
+    set(key: string, value: any) {
 
         key = this.storageKey + key;
         this.checkKey(key);
@@ -121,12 +116,15 @@ export class LocalStorage {
     remove(key: string) {
         key = this.storageKey + key;
         this.checkKey(key);
-        const existed = (this.storage.getItem(key) !== null);
-        this.storage.removeItem(key);
+        const val = this.storage.getItem(key);
+        const existed = !!val;
+        if (existed) {
+            this.storage.removeItem(key);
+        }
         return existed;
     };
 
-    private checkKey(key) {
+    private checkKey(key: string) {
         if (!key || (typeof key !== 'string')) {
             throw new TypeError('Key type must be string');
         }

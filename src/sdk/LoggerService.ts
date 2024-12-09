@@ -1,6 +1,4 @@
-import {
-    LoggerInterface, LoggerLevelEnum
-} from './interfaces';
+import {LoggerInterface, LoggerLevelEnum} from './Interfaces';
 
 export class LoggerService implements LoggerInterface {
 
@@ -36,4 +34,3 @@ export class LoggerService implements LoggerInterface {
         this.level = level;
     }
 }
-

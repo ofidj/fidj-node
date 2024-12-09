@@ -1,4 +1,4 @@
-import {Ajax} from './ajax';
+import {Ajax} from './Ajax';
 import * as tools from '../tools';
 import {LocalStorage} from '../tools';
 import {ErrorInterface, FidjError, LoggerInterface, SdkInterface} from '../sdk';
@@ -51,13 +51,6 @@ export class Client {
         // this.storage.set('clientInfo', this.clientInfo);
     }
 
-    /**
-     *
-     * @param login
-     * @param password
-     * @param updateProperties
-     * @throws {ErrorInterface}
-     */
     public async login(login: string, password: string, updateProperties?: any): Promise<ClientTokens> {
 
         if (!this.URI) {

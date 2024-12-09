@@ -1,1 +1,1 @@
-export * from './fidj';
+export * from './Fidj';

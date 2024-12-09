@@ -1,4 +1,4 @@
-import {ErrorInterface} from './interfaces';
+import {ErrorInterface} from './Interfaces';
 
 export class FidjError implements ErrorInterface {
 

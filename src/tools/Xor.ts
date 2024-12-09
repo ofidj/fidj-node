@@ -1,4 +1,4 @@
-import {Base64} from './base64';
+import {Base64} from './Base64';
 
 export class Xor {
 
@@ -6,7 +6,6 @@ export class Xor {
 
     constructor() {
     };
-
 
     public static encrypt(value: string, key: string): string {
 

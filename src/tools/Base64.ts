@@ -1,5 +1,3 @@
-const base64 = require('base-64');
-
 export class Base64 {
 
     constructor() {
@@ -9,11 +7,13 @@ export class Base64 {
      * Decodes string from Base64 string
      */
     public static encode(input: string): string {
-
+        console.log('encode?', input);
         if (!input) {
             return null;
         }
 
+        const base64 = require('base-64');
+        console.log('base64?', base64);
         // const _btoa = typeof window !== 'undefined' ? window.btoa : (a) => a;
 
         let result = ''
@@ -30,10 +30,13 @@ export class Base64 {
 
     public static decode(input: string): string {
 
+        console.log('decode?', input);
         if (!input) {
             return null;
         }
 
+        const base64 = require('base-64');
+        console.log('base64?', base64);
         // TODO const _atob = typeof window !== 'undefined' ? window.atob : import 'atob';
         // const _atob = window.atob;
         let result = ''

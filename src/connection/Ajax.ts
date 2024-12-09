@@ -1,4 +1,5 @@
 import axios from 'axios';
+import {ErrorInterface} from '../sdk';
 
 export interface XhrOptionsInterface {
     url: string,
@@ -12,29 +13,30 @@ export interface XhrOptionsInterface {
 }
 
 export enum XhrErrorReason {
-    UNKNOWN,
-    TIMEOUT,
-    STATUS
+    UNKNOWN = 'UNKNOWN',
+    TIMEOUT = 'TIMEOUT',
+    STATUS = 'STATUS'
 }
 
-
-export interface XhrErrorInterface {
+export interface XhrErrorInterface extends ErrorInterface {
+    code: number,
     reason: XhrErrorReason,
     status: number,
-    code: number,
     message: string,
+    data?: any,
 }
 
 export class Ajax {
 
-    // private static xhr: XHRPromise = new XHRPromise();
-    private xhr; // : XHRPromise;
-
     constructor() {
-        this.xhr = axios;
-    };
+    }
 
-    private static formatResponseData(response: any): any {
+    private static formatResponseData(response: any): { status: number, data?: any } {
+
+        if (response?.status && (parseInt(response.status, 10) < 200 || parseInt(response.status, 10) >= 300)) {
+            throw Ajax.formatError(response);
+        }
+
         const status = response?.status ? response.status : 200;
         let data = response;
         while (data && typeof data.data !== 'undefined') {
@@ -80,31 +82,21 @@ export class Ajax {
                 errorFormatted.status = 408;
                 errorFormatted.code = 408;
             }
-
         } else if (error.request) {
             errorFormatted.message = error.request;
         } else if (error.message) {
             errorFormatted.message = error.message;
         }
 
-        // _this._handleError('browser', reject, null, 'browser doesn\'t support XMLHttpRequest');
-        // _this._handleError('url', reject, null, 'URL is a required parameter');
-        // _this._handleError('parse', reject, null, 'invalid JSON response');
-        // return _this._handleError('error', reject);
-        // return _this._handleError('timeout', reject);
-        // return _this._handleError('abort', reject);
-        // return _this._handleError('send', reject, null, e.toString());
-
-        // if (err.reason === 'timeout') {
-        //     err.code = 408;
-        // } else {
-        //     err.code = 404;
-        // }
-
         return errorFormatted;
     };
 
-    public async post(args: XhrOptionsInterface): Promise<any | XhrErrorInterface> {
+
+    /**
+     * @throws XhrErrorInterface
+     * @param args
+     */
+    public async post(args: XhrOptionsInterface): Promise<{ status: number, data?: any }> {
 
         const opt: any = {
             method: 'POST',
@@ -120,21 +112,22 @@ export class Ajax {
             options['timeout'] = args.timeout;
         }
 
-        return this.xhr.post(opt.url, opt.data, options)
-            .then(res => {
-                if (res.status &&
-                    (parseInt(res.status, 10) < 200 || parseInt(res.status, 10) >= 300)) {
-                    return Promise.reject(Ajax.formatError(res));
-                }
+        let res: any;
+        try {
+            res = await axios.post(opt.url, opt.data, options);
+        } catch (err) {
+            throw Ajax.formatError(err);
+        }
 
-                return Promise.resolve(Ajax.formatResponseData(res));
-            })
-            .catch(err => {
-                return Promise.reject(Ajax.formatError(err));
-            });
+        return Ajax.formatResponseData(res);
+
     }
 
-    public async put(args: XhrOptionsInterface): Promise<any | XhrErrorInterface> {
+    /**
+     * @throws XhrErrorInterface
+     * @param args
+     */
+    public async put(args: XhrOptionsInterface): Promise<{ status: number, data?: any }> {
         const opt: any = {
             method: 'PUT',
             url: args.url,
@@ -148,22 +141,20 @@ export class Ajax {
             options['timeout'] = args.timeout;
         }
 
-        return this.xhr
-            .put(opt.url, opt.data, options)
-            .then(res => {
-                if (res.status &&
-                    (parseInt(res.status, 10) < 200 || parseInt(res.status, 10) >= 300)) {
-                    return Promise.reject(Ajax.formatError(res));
-                }
-
-                return Promise.resolve(Ajax.formatResponseData(res));
-            })
-            .catch(err => {
-                return Promise.reject(Ajax.formatError(err));
-            });
+        let res: any;
+        try {
+            res = await axios.put(opt.url, opt.data, options);
+        } catch (err) {
+            throw Ajax.formatError(err);
+        }
+        return Ajax.formatResponseData(res);
     }
 
-    public async delete(args: XhrOptionsInterface): Promise<any | XhrErrorInterface> {
+    /**
+     * @throws XhrErrorInterface
+     * @param args
+     */
+    public async delete(args: XhrOptionsInterface): Promise<{ status: number, data?: any }> {
         const opt: any = {
             method: 'DELETE',
             url: args.url,
@@ -176,22 +167,21 @@ export class Ajax {
         if (args.timeout) {
             options['timeout'] = args.timeout;
         }
-        return this.xhr
-            .delete(opt.url, options)
-            .then(res => {
-                if (res.status &&
-                    (parseInt(res.status, 10) < 200 || parseInt(res.status, 10) >= 300)) {
-                    return Promise.reject(Ajax.formatError(res));
-                }
 
-                return Promise.resolve(Ajax.formatResponseData(res));
-            })
-            .catch(err => {
-                return Promise.reject(Ajax.formatError(err));
-            });
+        let res: any;
+        try {
+            res = await axios.delete(opt.url, options);
+        } catch (err) {
+            throw Ajax.formatError(err);
+        }
+        return Ajax.formatResponseData(res);
     }
 
-    public async get(args: XhrOptionsInterface): Promise<any | XhrErrorInterface> {
+    /**
+     * @throws XhrErrorInterface
+     * @param args
+     */
+    public async get(args: XhrOptionsInterface): Promise<{ status: number, data?: any }> {
         const opt: any = {
             method: 'GET',
             url: args.url
@@ -206,18 +196,13 @@ export class Ajax {
         if (args.timeout) {
             options['timeout'] = args.timeout;
         }
-        return this.xhr
-            .get(opt.url, options)
-            .then(res => {
-                if (res.status &&
-                    (parseInt(res.status, 10) < 200 || parseInt(res.status, 10) >= 300)) {
-                    return Promise.reject(Ajax.formatError(res));
-                }
 
-                return Promise.resolve(Ajax.formatResponseData(res));
-            })
-            .catch(err => {
-                return Promise.reject(Ajax.formatError(err));
-            });
+        let res: any;
+        try {
+            res = await axios.get(opt.url, options);
+        } catch (err) {
+            throw Ajax.formatError(err);
+        }
+        return Ajax.formatResponseData(res);
     }
 }

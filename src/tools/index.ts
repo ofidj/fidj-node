@@ -1,3 +1,3 @@
-export * from './base64';
-export * from './storage';
-export * from './xor';
+export * from './Base64';
+export * from './Storage';
+export * from './Xor';

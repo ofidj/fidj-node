@@ -1,15 +1,9 @@
 import {expect} from 'chai';
-import {Xor} from '../../src';
+import {LocalStorage, Xor} from '../../src';
 
 describe('Tools', () => {
 
     const _key = 'azerty';
-
-    before(() => {
-    });
-    it('should todo', async () => {
-        expect(true).equal(true);
-    });
 
     it('should encrypt & decrypt', function () {
 
@@ -31,4 +25,52 @@ describe('Tools', () => {
 
     });
 
+    it('should set a string item', () => {
+
+        const fs = new LocalStorage('test');
+        let v = fs.set('a', 'v');
+        expect(v).eq('{"string":"v"}');
+
+        v = fs.get('a', 'default');
+        expect(v).eq('v');
+
+        v = fs.remove('a');
+        expect(v).eq(true);
+
+        v = fs.remove('a');
+        expect(v).eq(false);
+    });
+
+    it('should set a number item', () => {
+
+        const fs = new LocalStorage('test');
+
+        let v = fs.set('a', 15);
+        expect(v).eq('{"number":15}');
+
+        v = fs.get('a', 'default');
+        expect(v).eq(15);
+    });
+
+    it('should set a boolean item', () => {
+
+        const fs = new LocalStorage('test');
+        let v = fs.set('a', true);
+        expect(v).eq('{"bool":true}');
+        v = fs.get('a', 'default');
+        expect(v).eq(true);
+    });
+
+    it('should set an object item', () => {
+
+        const fs = new LocalStorage('test');
+
+        let v = fs.set('a', {a: 1, b: 's'});
+
+        expect(v).eq('{"json":{"a":1,"b":"s"}}');
+        v = fs.get('a', 'default');
+        expect(v.a).eq(1);
+        expect(v.b).eq('s');
+
+    });
 });

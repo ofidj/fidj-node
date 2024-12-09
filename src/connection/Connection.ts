@@ -1,7 +1,7 @@
-import {Client} from './client';
+import {Client} from './Client';
 import {EndpointInterface, ErrorInterface, FidjError, LoggerInterface, ModuleServiceLoginOptionsInterface, SdkInterface} from '../sdk';
 import {Base64, LocalStorage, Xor} from '../tools';
-import {Ajax} from './ajax';
+import {Ajax} from './Ajax';
 import {ClientToken, ClientTokens, ClientUser, ConnectionFindOptionsInterface} from './interfaces';
 
 export class Connection {
@@ -13,15 +13,17 @@ export class Connection {
     private static _states = 'v2.states';
     private static _cryptoSalt = 'v2.cryptoSalt';
     private static _cryptoSaltNext = 'v2.cryptoSalt.next';
+
     public fidjId: string;
     public fidjVersion: string;
     public fidjCrypto: boolean;
-    public accessToken: string;
-    public accessTokenPrevious: string;
-    public idToken: string;
-    public refreshToken: string;
-    public states: { [s: string]: { state: boolean, time: number, lastTimeWasOk: number }; }; // Map<string, boolean>;
-    public apis: Array<EndpointInterface>;
+
+    private accessToken: string;
+    private accessTokenPrevious: string;
+    private idToken: string;
+    private refreshToken: string;
+    private states: { [s: string]: { state: boolean, time: number, lastTimeWasOk: number }; }; // Map<string, boolean>;
+    private apis: Array<EndpointInterface>;
     private cryptoSalt: string;
     private cryptoSaltNext: string;
     private client: Client;
@@ -533,7 +535,6 @@ export class Connection {
         // }
 
         // verify via GET status on Endpoints & DBs
-        const promises = [];
         this.states = {};
         this.apis = await this.getApiEndpoints();
         for (const api of this.apis) {
