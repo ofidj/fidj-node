@@ -16,7 +16,11 @@ export enum XhrErrorReason {
     UNKNOWN = 'UNKNOWN',
     TIMEOUT = 'TIMEOUT',
     STATUS = 'STATUS',
-    ECONNREFUSED = 'ECONNREFUSED'
+    ECONNREFUSED = 'ECONNREFUSED',
+    ENOTFOUND = 'ENOTFOUND',
+    ETIMEDOUT = 'ETIMEDOUT',
+    ECONNRESET = 'ECONNRESET',
+    EHOSTUNREACH = 'EHOSTUNREACH',
 }
 
 export interface XhrErrorInterface extends ErrorInterface {
@@ -56,8 +60,8 @@ export class Ajax {
 
         const errorFormatted: XhrErrorInterface = {
             reason: XhrErrorReason.UNKNOWN,
-            status: -1,
-            code: -1,
+            status: 500,
+            code: 500,
             message: '',
         };
 
@@ -89,6 +93,22 @@ export class Ajax {
                 errorFormatted.reason = XhrErrorReason.ECONNREFUSED;
                 errorFormatted.status = 503;
                 errorFormatted.code = 503;
+            } else if (error.code === XhrErrorReason.ENOTFOUND) {
+                errorFormatted.reason = XhrErrorReason.ENOTFOUND;
+                errorFormatted.status = 404;
+                errorFormatted.code = 404;
+            } else if (error.code === XhrErrorReason.ETIMEDOUT) {
+                errorFormatted.reason = XhrErrorReason.ETIMEDOUT;
+                errorFormatted.status = 408;
+                errorFormatted.code = 408;
+            } else if (error.code === XhrErrorReason.ECONNRESET) {
+                errorFormatted.reason = XhrErrorReason.ECONNRESET;
+                errorFormatted.status = 429;
+                errorFormatted.code = 429;
+            } else if (error.code === XhrErrorReason.EHOSTUNREACH) {
+                errorFormatted.reason = XhrErrorReason.EHOSTUNREACH;
+                errorFormatted.status = 404;
+                errorFormatted.code = 404;
             }
 
             if (error.message) {
