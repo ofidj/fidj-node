@@ -15,14 +15,15 @@ export interface XhrOptionsInterface {
 export enum XhrErrorReason {
     UNKNOWN = 'UNKNOWN',
     TIMEOUT = 'TIMEOUT',
-    STATUS = 'STATUS'
+    STATUS = 'STATUS',
+    ECONNREFUSED = 'ECONNREFUSED'
 }
 
 export interface XhrErrorInterface extends ErrorInterface {
-    code: number,
-    reason: XhrErrorReason,
     status: number,
     message: string,
+    code: number,
+    reason: XhrErrorReason,
     data?: any,
 }
 
@@ -82,10 +83,19 @@ export class Ajax {
                 errorFormatted.status = 408;
                 errorFormatted.code = 408;
             }
-        } else if (error.request) {
-            errorFormatted.message = error.request;
-        } else if (error.message) {
-            errorFormatted.message = error.message;
+        } else {
+
+            if (error.code === XhrErrorReason.ECONNREFUSED) {
+                errorFormatted.reason = XhrErrorReason.ECONNREFUSED;
+                errorFormatted.status = 503;
+                errorFormatted.code = 503;
+            }
+
+            if (error.message) {
+                errorFormatted.message = error.message;
+            } else if (error.request) {
+                errorFormatted.message = error.request;
+            }
         }
 
         return errorFormatted;
