@@ -441,6 +441,9 @@ export class FidjNodeService implements IService {
     }
 
     public async sendOnEndpoint(input: EndpointCallInterface): Promise<{ status: number, data?: any }> {
+
+        await this.sync();
+
         const filter: EndpointFilterInterface = input.key ? {key: input.key} : null;
         const endpoints = await this.fidjGetEndpoints(filter);
         if (!input.defaultKeyUrl && (!endpoints || endpoints.length !== 1)) {

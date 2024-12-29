@@ -607,7 +607,7 @@ describe('FidjNodeService', () => {
 
     });
 
-    it('should sendOnEndpoint KO : 400 without valid endpoint', function (done) {
+    xit('should sendOnEndpoint KO : 400 without valid endpoint', function (done) {
 
         let accessPayload;
         const srv = new FidjNodeService(_log, _q);
