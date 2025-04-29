@@ -1,1 +1,1 @@
-export const Fidj = {version: 'v15.1.8'}
+export const Fidj = {version: 'v15.1.10'}

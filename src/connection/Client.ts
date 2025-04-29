@@ -2,7 +2,7 @@ import {Ajax} from './Ajax';
 import * as tools from '../tools';
 import {LocalStorage} from '../tools';
 import {ErrorInterface, FidjError, LoggerInterface, SdkInterface} from '../sdk';
-import {ClientToken, ClientTokens, ClientUser} from './interfaces';
+import {ClientToken, ClientTokens, ClientUser} from './Interfaces';
 
 export class Client {
 

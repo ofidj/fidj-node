@@ -2,7 +2,7 @@ import {Client} from './Client';
 import {EndpointInterface, ErrorInterface, FidjError, LoggerInterface, ModuleServiceLoginOptionsInterface, SdkInterface} from '../sdk';
 import {Base64, LocalStorage, Xor} from '../tools';
 import {Ajax} from './Ajax';
-import {ClientToken, ClientTokens, ClientUser, ConnectionFindOptionsInterface} from './interfaces';
+import {ClientToken, ClientTokens, ClientUser, ConnectionFindOptionsInterface} from './Interfaces';
 
 export class Connection {
 
