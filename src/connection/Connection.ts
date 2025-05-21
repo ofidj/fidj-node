@@ -2,22 +2,23 @@ import {Client} from './Client';
 import {EndpointInterface, ErrorInterface, FidjError, LoggerInterface, ModuleServiceLoginOptionsInterface, SdkInterface} from '../sdk';
 import {Base64, LocalStorage, Xor} from '../tools';
 import {Ajax} from './Ajax';
-import {ClientToken, ClientTokens, ClientUser, ConnectionFindOptionsInterface} from './Interfaces';
+import {ConnectionFindOptionsInterface} from './Interfaces';
+import {ClientUser} from './ClientUser';
+import {ClientTokens} from './ClientTokens';
+import {ClientToken} from './ClientToken';
 
 export class Connection {
-
-    private static _accessToken = 'v2.accessToken';
-    private static _accessTokenPrevious = 'v2.accessTokenPrevious';
-    private static _idToken = 'v2.idToken';
-    private static _refreshToken = 'v2.refreshToken';
-    private static _states = 'v2.states';
-    private static _cryptoSalt = 'v2.cryptoSalt';
-    private static _cryptoSaltNext = 'v2.cryptoSalt.next';
 
     public fidjId: string;
     public fidjVersion: string;
     public fidjCrypto: boolean;
-
+    private _accessToken: string;
+    private _accessTokenPrevious: string;
+    private _idToken: string;
+    private _refreshToken: string;
+    private _states: string;
+    private _cryptoSalt: string;
+    private _cryptoSaltNext: string;
     private accessToken: string;
     private accessTokenPrevious: string;
     private idToken: string;
@@ -34,36 +35,52 @@ export class Connection {
                 private _logger: LoggerInterface) {
         this.client = null;
         this.user = null;
-        this.cryptoSalt = this._storage.get(Connection._cryptoSalt) || null;
-        this.cryptoSaltNext = this._storage.get(Connection._cryptoSaltNext) || null;
-        this.accessToken = this._storage.get(Connection._accessToken) || null;
-        this.accessTokenPrevious = this._storage.get('v2.accessTokenPrevious') || null;
-        this.idToken = this._storage.get(Connection._idToken) || null;
-        this.refreshToken = this._storage.get(Connection._refreshToken) || null;
-        this.states = this._storage.get(Connection._states) || {};
-        this.apis = [];
     };
 
     isReady(): boolean {
         return !!this.client && this.client.isReady();
     }
 
+    async init(fidjVersion: string, fidjId: string, fidjCrypto: boolean) {
+
+        this.fidjId = fidjId;
+        this.fidjVersion = fidjVersion;
+        this.fidjCrypto = fidjCrypto;
+
+        this._accessToken = 'v2.accessToken.' + this.fidjId;
+        this._accessTokenPrevious = 'v2.accessTokenPrevious.' + this.fidjId;
+        this._idToken = 'v2.idToken.' + this.fidjId;
+        this._refreshToken = 'v2.refreshToken.' + this.fidjId;
+        this._states = 'v2.states.' + this.fidjId;
+        this._cryptoSalt = 'v2.cryptoSalt.' + this.fidjId;
+        this._cryptoSaltNext = 'v2.cryptoSalt.next.' + this.fidjId;
+
+        this.cryptoSalt = this._storage.get(this._cryptoSalt) || null;
+        this.cryptoSaltNext = this._storage.get(this._cryptoSaltNext) || null;
+        this.accessToken = this._storage.get(this._accessToken) || null;
+        this.accessTokenPrevious = this._storage.get(this._accessTokenPrevious) || null;
+        this.idToken = this._storage.get(this._idToken) || null;
+        this.refreshToken = this._storage.get(this._refreshToken) || null;
+        this.states = this._storage.get(this._states) || {};
+        this.apis = [];
+    }
+
     async destroy(force?: boolean) {
 
-        this._storage.remove(Connection._accessToken);
-        this._storage.remove(Connection._idToken);
-        this._storage.remove(Connection._refreshToken);
-        this._storage.remove(Connection._states);
+        this._storage.remove(this._accessToken);
+        this._storage.remove(this._idToken);
+        this._storage.remove(this._refreshToken);
+        this._storage.remove(this._states);
 
         if (this.accessToken) {
             this.accessTokenPrevious = this.accessToken;
-            this._storage.set(Connection._accessTokenPrevious, this.accessTokenPrevious);
+            this._storage.set(this._accessTokenPrevious, this.accessTokenPrevious);
         }
 
         if (force) {
-            this._storage.remove(Connection._cryptoSalt);
-            this._storage.remove(Connection._cryptoSaltNext);
-            this._storage.remove(Connection._accessTokenPrevious);
+            this._storage.remove(this._cryptoSalt);
+            this._storage.remove(this._cryptoSaltNext);
+            this._storage.remove(this._accessTokenPrevious);
         }
 
         this.user = null;
@@ -108,7 +125,7 @@ export class Connection {
     setCryptoSalt(value: string) {
         if (this.cryptoSalt !== value && this.cryptoSaltNext !== value) {
             this.cryptoSaltNext = value;
-            this._storage.set(Connection._cryptoSaltNext, this.cryptoSaltNext);
+            this._storage.set(this._cryptoSaltNext, this.cryptoSaltNext);
         }
 
         if (!this.cryptoSalt) {
@@ -119,10 +136,10 @@ export class Connection {
     setCryptoSaltAsVerified() {
         if (this.cryptoSaltNext) {
             this.cryptoSalt = this.cryptoSaltNext;
-            this._storage.set(Connection._cryptoSalt, this.cryptoSalt);
+            this._storage.set(this._cryptoSalt, this.cryptoSalt);
         }
         this.cryptoSaltNext = null;
-        this._storage.remove(Connection._cryptoSaltNext);
+        this._storage.remove(this._cryptoSaltNext);
     }
 
     encrypt(data: any): string {
@@ -308,7 +325,7 @@ export class Connection {
             const expired = (new Date().getTime() / 1000) >= JSON.parse(decoded).exp;
             this._logger.log('fidj.connection.connection.refreshConnection : refreshToken not expired ? ', expired);
             if (expired) {
-                this._storage.remove(Connection._refreshToken);
+                this._storage.remove(this._refreshToken);
             }
         }
 
@@ -337,7 +354,7 @@ export class Connection {
         // only in private storage
         if (clientTokens.accessToken) {
             this.accessToken = clientTokens.accessToken.data;
-            this._storage.set(Connection._accessToken, this.accessToken);
+            this._storage.set(this._accessToken, this.accessToken);
 
             const salt: string = JSON.parse(await this.getAccessPayload({salt: ''})).salt;
             if (salt) {
@@ -346,21 +363,21 @@ export class Connection {
         }
         if (clientTokens.idToken) {
             this.idToken = clientTokens.idToken.data;
-            this._storage.set(Connection._idToken, this.idToken);
+            this._storage.set(this._idToken, this.idToken);
         }
         if (clientTokens.refreshToken) {
             this.refreshToken = clientTokens.refreshToken.data;
-            this._storage.set(Connection._refreshToken, this.refreshToken);
+            this._storage.set(this._refreshToken, this.refreshToken);
         }
 
         // store changed states
-        this._storage.set(Connection._states, this.states);
+        this._storage.set(this._states, this.states);
 
         // expose roles, message
         const clientUser = new ClientUser(
             clientTokens.username, clientTokens.username,
             JSON.parse(await this.getIdPayload({roles: []})).roles,
-            JSON.parse(await this.getIdPayload({message: ''})).message);
+        );
         this.setUser(clientUser);
     };
 
@@ -368,20 +385,20 @@ export class Connection {
 
         if (options.accessToken) {
             this.accessToken = options.accessToken;
-            this._storage.set(Connection._accessToken, this.accessToken);
+            this._storage.set(this._accessToken, this.accessToken);
         }
         if (options.idToken) {
             this.idToken = options.idToken;
-            this._storage.set(Connection._idToken, this.idToken);
+            this._storage.set(this._idToken, this.idToken);
         }
         if (options.refreshToken) {
             this.refreshToken = options.refreshToken;
-            this._storage.set(Connection._refreshToken, this.refreshToken);
+            this._storage.set(this._refreshToken, this.refreshToken);
         }
 
         this.setUser(new ClientUser('demo', 'demo',
             JSON.parse(await this.getIdPayload({roles: []})).roles,
-            JSON.parse(await this.getIdPayload({message: ''})).message));
+        ));
     }
 
     async getApiEndpoints(options?: ConnectionFindOptionsInterface): Promise<Array<EndpointInterface>> {
@@ -567,11 +584,11 @@ export class Connection {
     protected removingCurrentTokens() {
         if (this.accessToken) {
             this.accessTokenPrevious = this.accessToken;
-            this._storage.set('v2.accessTokenPrevious', this.accessTokenPrevious);
+            this._storage.set(this._accessTokenPrevious, this.accessTokenPrevious);
         }
 
-        this._storage.remove(Connection._accessToken);
-        this._storage.remove(Connection._idToken);
+        this._storage.remove(this._accessToken);
+        this._storage.remove(this._idToken);
         this.accessToken = null;
         this.idToken = null;
     }
@@ -605,7 +622,7 @@ export class Connection {
         }
 
         // store states
-        this._storage.set(Connection._states, this.states);
+        this._storage.set(this._states, this.states);
     }
 
     private async verifyDbState(currentTime: number, dbEndpoint: string) {
@@ -631,7 +648,7 @@ export class Connection {
         }
 
         // store states
-        this._storage.set(Connection._states, this.states);
+        this._storage.set(this._states, this.states);
     }
 
 }

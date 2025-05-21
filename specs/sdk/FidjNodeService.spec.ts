@@ -192,7 +192,7 @@ describe('FidjNodeService', () => {
         spy.on((srv as any).connection, 'setConnection', returns => Promise.resolve(null))
         spy.on((srv as any).session, 'sync', returns => Promise.resolve());
         spy.on((srv as any).connection, 'getClientId', returns => 'clientId');
-        spy.on((srv as any).connection, 'getUser', returns => new ClientUser('id', 'getUser', [], 'message'));
+        spy.on((srv as any).connection, 'getUser', returns => new ClientUser('id', 'getUser', []));
 
         const value = await srv.init('testAppProd', {logLevel: LoggerLevelEnum.NONE, prod: false, crypto: false, useDB: false});
 
@@ -228,7 +228,7 @@ describe('FidjNodeService', () => {
         spy.on((srv as any).connection, 'setConnection', returns => Promise.resolve(null))
         spy.on((srv as any).session, 'sync', returns => Promise.resolve());
         spy.on((srv as any).connection, 'getClientId', returns => 'clientId');
-        spy.on((srv as any).connection, 'getUser', returns => new ClientUser('id', 'getUser', [], 'message'));
+        spy.on((srv as any).connection, 'getUser', returns => new ClientUser('id', 'getUser', []));
 
         const user = await srv.login(_login, _password);
 
@@ -250,7 +250,7 @@ describe('FidjNodeService', () => {
         spy.on((srv as any), '_removeAll', returns => Promise.resolve());
         spy.on((srv as any).connection, 'setConnectionOffline', returns => Promise.resolve(null));
         spy.on((srv as any), '_createSession', returns => Promise.resolve());
-        spy.on((srv as any).connection, 'getUser', returns => new ClientUser('id', 'getUser', [], 'message'));
+        spy.on((srv as any).connection, 'getUser', returns => new ClientUser('id', 'getUser', []));
         spy.on(Base64, 'encode', returns => 'encoded');
 
         const user = await srv.loginInDemoMode()

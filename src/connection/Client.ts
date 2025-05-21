@@ -2,17 +2,19 @@ import {Ajax} from './Ajax';
 import * as tools from '../tools';
 import {LocalStorage} from '../tools';
 import {ErrorInterface, FidjError, LoggerInterface, SdkInterface} from '../sdk';
-import {ClientToken, ClientTokens, ClientUser} from './Interfaces';
+import {ClientTokens} from './ClientTokens';
+import {ClientUser} from './ClientUser';
+import {ClientToken} from './ClientToken';
 
 export class Client {
 
     // private refreshToken: string;
     private static refreshCountInitial = 1;
     private static refreshCount = Client.refreshCountInitial;
-    private static _clientUuid = 'v2.clientUuid';
-    private static _clientId = 'v2.clientId';
-    private static _refreshCount = 'v2.refreshCount';
     public clientId: string;
+    private _clientUuid: string;
+    private _clientId: string;
+    private _refreshCount: string;
     private clientUuid: string;
     private clientInfo: string;
 
@@ -22,8 +24,13 @@ export class Client {
                 private sdk: SdkInterface,
                 private logger: LoggerInterface) {
 
-        let uuid: string = this.storage.get(Client._clientUuid) || 'uuid-' + Math.random();
-        let info = '_clientInfo'; // this.storage.get(Client._clientInfo);
+
+        this._clientUuid = 'v2.clientUuid.' + appId;
+        this._clientId = 'v2.clientId.' + appId;
+        this._refreshCount = 'v2.refreshCount.' + appId;
+
+        let uuid: string = this.storage.get(this._clientUuid) || 'uuid-' + Math.random();
+        let info = '_clientInfo'; // this.storage.get(this._clientInfo);
         if (typeof window !== 'undefined' && window.navigator) {
             info = window.navigator.appName + '@' + window.navigator.appVersion + '-' + window.navigator.userAgent;
         }
@@ -32,18 +39,18 @@ export class Client {
         }
         this.setClientUuid(uuid);
         this.setClientInfo(info);
-        this.clientId = this.storage.get(Client._clientId);
-        Client.refreshCount = this.storage.get(Client._refreshCount) || Client.refreshCountInitial;
+        this.clientId = this.storage.get(this._clientId);
+        Client.refreshCount = this.storage.get(this._refreshCount) || Client.refreshCountInitial;
     };
 
     public setClientId(value: string) {
         this.clientId = '' + value;
-        this.storage.set(Client._clientId, this.clientId);
+        this.storage.set(this._clientId, this.clientId);
     }
 
     public setClientUuid(value: string) {
         this.clientUuid = '' + value;
-        this.storage.set(Client._clientUuid, this.clientUuid);
+        this.storage.set(this._clientUuid, this.clientUuid);
     }
 
     public setClientInfo(value: string) {
@@ -167,7 +174,7 @@ export class Client {
         }) as any).data.token;
 
         Client.refreshCount++;
-        this.storage.set(Client._refreshCount, Client.refreshCount);
+        this.storage.set(this._refreshCount, Client.refreshCount);
 
         return {createdAccessToken, createdIdToken};
     }
@@ -181,9 +188,9 @@ export class Client {
 
         // delete this.clientUuid;
         // delete this.clientId;
-        // this.storage.remove(Client._clientUuid);
-        this.storage.remove(Client._clientId);
-        this.storage.remove(Client._refreshCount);
+        // this.storage.remove(this._clientUuid);
+        this.storage.remove(this._clientId);
+        this.storage.remove(this._refreshCount);
         Client.refreshCount = Client.refreshCountInitial;
 
         if (!refreshToken || !this.clientId) {

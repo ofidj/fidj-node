@@ -1,28 +1,16 @@
 # fidj-node
 
-> fidj node tools - A TypeScript library providing utilities for client authentication, session management, and more.
+> FIDJ node tools - A TypeScript library providing utilities for client authentication, session management, and more.
 
 ## 📋 Description
 
-fidj-node is a Node.js library that provides a set of tools for client authentication, connection management, session handling, and various utility functions. It's designed to simplify interactions with remote services or APIs.
+Node.js library that provides a set of tools for FIDJ client authentication, connection management, session
+handling, and various utility functions. It's designed to simplify interactions with remote services or APIs.
 
 ## 🚀 Installation
 
 ```bash
 npm install fidj-node
-```
-
-## 🔧 Usage
-
-```typescript
-import { ClientUser, ClientTokens, Base64, Storage } from 'fidj-node';
-
-// Example: Create a new client user
-const user = new ClientUser('user123', 'johndoe', ['user', 'admin'], 'Welcome!');
-
-// Example: Use the Base64 utility
-const encoded = Base64.encode('Hello, world!');
-const decoded = Base64.decode(encoded);
 ```
 
 ## 🧩 Modules
@@ -49,13 +37,15 @@ Please read the [specifications](./specs) for detailed information about each mo
 This project uses a Memory Bank for comprehensive documentation and context retention. The Memory Bank is located in the
 `.memory-bank` directory and contains the following files:
 
-- `memory-bank-rules.md`: Rules for maintaining the Memory Bank
-- `projectbrief.md`: Overview of the project, core requirements, and goals (to be created)
-- `productContext.md`: Why the project exists, problems it solves, and how it works (to be created)
-- `systemPatterns.md`: System architecture, key technical decisions, and design patterns (to be created)
-- `techContext.md`: Technologies used, development setup, and technical constraints (to be created)
-- `activeContext.md`: Current work focus, recent changes, and next steps (to be created)
-- `progress.md`: What works, what's left to build, and known issues (to be created)
+- `memory-bank-rules.md`: Rules to follow and to consider in all contexts
+- `projectbrief.md`: Overview of the project, core requirements, and goals
+- `productContext.md`: Why the project exists, problems it solves, and how it works
+- `systemPatterns.md`: System architecture, key technical decisions, and design patterns
+- `techContext.md`: Technologies used, development setup, and technical constraints
+- `activeContext.md`: Current work focus, recent changes, and next steps
+- `progress.md`: What works, what's left to build, and known issues
+
+=> !! These files should always be considered as a context and kept up-to-date !!
 
 ## 🧪 Testing
 
@@ -69,7 +59,7 @@ npm run test-coverage
 
 ## 📝 History
 
-See [Release notes](./RELEASE.md).
+See [Changelog](./CHANGELOG.md).
 
 ## 📄 License
 

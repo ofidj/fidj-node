@@ -100,7 +100,7 @@ flowchart TD
 flowchart TD
     Start[Start] --> Context[Check Memory Bank]
     Context --> Update[Update Documentation]
-    Update --> Rules[Update activeContext.md if needed]
+    Update --> Rules[Update README.md if needed]
     Rules --> Execute[Execute Task]
     Execute --> Document[Document Changes]
 ```
@@ -122,7 +122,7 @@ flowchart TD
         P1[Review ALL Files]
         P2[Document Current State]
         P3[Clarify Next Steps]
-        P4[Update activeContext.md]
+        P4[Update README.md]
         
         P1 --> P2 --> P3 --> P4
     end
@@ -133,9 +133,9 @@ flowchart TD
 Note: When triggered by **update memory bank**, I MUST review every memory bank file, even if some don't require
 updates. Focus particularly on activeContext.md and progress.md as they track current state.
 
-## Project Intelligence (activeContext.md)
+## Project Intelligence (README.md)
 
-The activeContext.md file is also my learning journal for each project. It captures important patterns, preferences, and project
+The README.md file is my learning journal for each project. It captures important patterns, preferences, and project
 intelligence that help me work more effectively. As I work with you and the project, I'll discover and document key
 insights that aren't obvious from the code alone.
 
@@ -146,11 +146,11 @@ flowchart TD
     subgraph Learn [Learning Process]
         D1[Identify Pattern]
         D2[Validate with User]
-        D3[Document in Readme]
+        D3[Document in README.md]
     end
     
     subgraph Apply [Usage]
-        A1[Read activeContext.md]
+        A1[Read README.md]
         A2[Apply Learned Patterns]
         A3[Improve Future Work]
     end
@@ -169,7 +169,7 @@ flowchart TD
 - Tool usage patterns
 
 The format is flexible - focus on capturing valuable insights that help me work more effectively with you and the
-project. Think of activeContext.md as a living document that grows smarter as we work together.
+project. Think of README.md as a living document that grows smarter as we work together.
 
 REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must
 be maintained with precision and clarity, as my effectiveness depends entirely on its accuracy. 

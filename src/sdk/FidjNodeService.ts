@@ -1,7 +1,6 @@
-import {Fidj} from '../module';
 import * as tools from '../tools';
 import * as connection from '../connection';
-import {Ajax, ClientTokens} from '../connection';
+import {Ajax, ClientTokens, OwnerUser} from '../connection';
 import * as session from '../session';
 import {SessionCryptoInterface} from '../session';
 import {
@@ -19,6 +18,7 @@ import {LoggerService} from './LoggerService';
 import urlJoin from 'proper-url-join';
 import {FidjError} from './FidjError';
 import {IService} from './IService';
+import {bpInfo} from '../bpInfo';
 
 // TODO const PouchDB = window['PouchDB'] || require('pouchdb').default;
 
@@ -36,7 +36,7 @@ export class FidjNodeService implements IService {
 
         this.sdk = {
             org: 'fidj',
-            version: Fidj.version.substring(1),
+            version: bpInfo.version.substring(1),
             prod: false,
             useDB: true
         };
@@ -103,11 +103,9 @@ export class FidjNodeService implements IService {
             throw new FidjError(400, 'Need a fidjId');
         }
 
-        this.connection.fidjId = fidjId;
         this.sdk.prod = !options ? true : options.prod;
         this.sdk.useDB = !options ? false : options.useDB;
-        this.connection.fidjVersion = this.sdk.version;
-        this.connection.fidjCrypto = (!options || !options.hasOwnProperty('crypto')) ? false : options.crypto;
+        await this.connection.init(this.sdk.version, fidjId, (!options || !options.hasOwnProperty('crypto')) ? false : options.crypto)
 
         let bestUrls = [], bestOldUrls = [];
         try {
@@ -157,13 +155,6 @@ export class FidjNodeService implements IService {
         return this.connection.getUser();
     }
 
-    /**
-     *
-     * @param options
-     * @param options.accessToken optional
-     * @param options.idToken  optional
-     * @returns
-     */
     public async loginInDemoMode(options?: ModuleServiceLoginOptionsInterface): Promise<any | ErrorInterface> {
         const self = this;
 
@@ -208,6 +199,14 @@ export class FidjNodeService implements IService {
     public isLoggedIn(): boolean {
         return this.connection.isLogin();
     };
+
+    public getOwnerUser() {
+        const clientUser = this.connection.getUser();
+        if (clientUser.roles.indexOf('Owner') > -1) {
+            return new OwnerUser(this, this.connection, clientUser.id, clientUser.username, clientUser.roles);
+        }
+        return null;
+    }
 
     public async fidjGetEndpoints(filter?: EndpointFilterInterface): Promise<Array<EndpointInterface>> {
 
@@ -531,8 +530,6 @@ export class FidjNodeService implements IService {
             data: {email}
         });
     }
-
-    // Internal functions
 
     public async fidjGetIdToken() {
         return this.connection.getIdToken();
