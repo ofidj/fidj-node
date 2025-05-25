@@ -202,7 +202,7 @@ export class FidjNodeService implements IService {
 
     public getOwnerUser() {
         const clientUser = this.connection.getUser();
-        if (clientUser.roles.indexOf('Owner') > -1) {
+        if (clientUser?.roles.indexOf('Owner') > -1) {
             return new OwnerUser(this, this.connection, clientUser.id, clientUser.username, clientUser.roles);
         }
         return null;

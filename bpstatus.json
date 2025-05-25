@@ -1,11 +1,11 @@
 {
-  "version": "0.0.6",
-  "type": "standalone",
+  "version": "0.0.9",
+  "type": "package",
   "status": {
     "find-projects": "2025-05-21 10:47",
     "check-gitignore": "2025-05-21 12:29",
     "check-memory-bank": "2025-05-21 12:29",
-    "check-scripts": "2025-05-21 12:29",
-    "check-project-type": "2025-05-21 12:29"
+    "check-scripts": "2025-05-24 17:37",
+    "check-project-type": "2025-05-21 21:46"
   }
 }
