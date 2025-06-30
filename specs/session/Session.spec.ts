@@ -5,13 +5,11 @@ import {Session} from '../../src';
 use(spies);
 
 describe('Session', () => {
-
     const _sdk: any = {version: 'mock.sdk'};
     const _storage: any = {
-        get: key => {
-        }, set: key => {
-        }, remove: key => {
-        }
+        get: (key) => {},
+        set: (key) => {},
+        remove: (key) => {},
     };
 
     it('should be created', () => {
@@ -26,35 +24,32 @@ describe('Session', () => {
         const session = new Session();
 
         (session as any).db = {
-            sync: () => {
-            },
+            sync: () => {},
             replicate: {
-                to: (remoteDb) => {
-                }
-            }
+                to: (remoteDb) => {},
+            },
         };
         (session as any).remoteDb = {
             replicate: {
-                to: (remoteDb) => {
-                }
-            }
+                to: (remoteDb) => {},
+            },
         };
         (session as any).remoteUri = null;
         (session as any).dbs = [];
         const returned = {
             on: (code, callback) => {
-                callback(code)
-            }
+                callback(code);
+            },
         };
 
-        spy.on((session as any).db.replicate, 'to', returns => returned);
-        spy.on((session as any).remoteDb.replicate, 'to', returns => returned);
-        session.sync('userId')
+        spy.on((session as any).db.replicate, 'to', (returns) => returned);
+        spy.on((session as any).remoteDb.replicate, 'to', (returns) => returned);
+        session
+            .sync('userId')
             .then(() => {
                 assert.fail();
             })
             .catch((err) => {
-
                 expect(err.code).eq(408);
                 expect(err.reason).eq('need a remote db');
                 expect((session as any).remoteUri).eq(null);
@@ -62,8 +57,7 @@ describe('Session', () => {
                 expect((session as any).db.replicate.to).to.have.been.called.exactly(0);
                 expect((session as any).remoteDb.replicate.to).to.have.been.called.exactly(0);
                 done();
-            })
-
+            });
     });
     /*
         it('should sync', (done) => {

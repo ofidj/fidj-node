@@ -12,7 +12,7 @@ import {
     LoggerLevelEnum,
     ModuleServiceInitOptionsInterface,
     ModuleServiceLoginOptionsInterface,
-    SdkInterface
+    SdkInterface,
 } from './Interfaces';
 import {LoggerService} from './LoggerService';
 import urlJoin from 'proper-url-join';
@@ -23,7 +23,6 @@ import {bpInfo} from '../bpInfo';
 // TODO const PouchDB = window['PouchDB'] || require('pouchdb').default;
 
 export class FidjNodeService implements IService {
-
     private static _srvDataUniqId = 0;
     private sdk: SdkInterface;
     private logger: LoggerInterface;
@@ -32,13 +31,16 @@ export class FidjNodeService implements IService {
     private session: session.Session;
     private connection: connection.Connection;
 
-    constructor(logger?: LoggerInterface, promise?: PromiseConstructor, options?: ModuleServiceInitOptionsInterface) {
-
+    constructor(
+        logger?: LoggerInterface,
+        promise?: PromiseConstructor,
+        options?: ModuleServiceInitOptionsInterface
+    ) {
         this.sdk = {
             org: 'fidj',
             version: bpInfo.version.substring(1),
             prod: false,
-            useDB: true
+            useDB: true,
         };
         if (promise) {
             this.promise = promise;
@@ -68,7 +70,7 @@ export class FidjNodeService implements IService {
 
         const now = new Date();
         const expDate = new Date(payload.exp * 1000);
-        return (expDate.getTime() < now.getTime());
+        return expDate.getTime() < now.getTime();
     }
 
     static NameFromPayload(payload: any): string {
@@ -79,8 +81,7 @@ export class FidjNodeService implements IService {
         let roles = [];
         try {
             roles = [].concat(payload.roles);
-        } catch (ignored) {
-        }
+        } catch (ignored) {}
 
         return roles;
     }
@@ -90,7 +91,6 @@ export class FidjNodeService implements IService {
     }
 
     public async init(fidjId: string, options?: ModuleServiceInitOptionsInterface) {
-
         if (options?.logLevel) {
             this.logger.setLevel(options.logLevel);
         } else {
@@ -105,9 +105,14 @@ export class FidjNodeService implements IService {
 
         this.sdk.prod = !options ? true : options.prod;
         this.sdk.useDB = !options ? false : options.useDB;
-        await this.connection.init(this.sdk.version, fidjId, (!options || !options.hasOwnProperty('crypto')) ? false : options.crypto)
+        await this.connection.init(
+            this.sdk.version,
+            fidjId,
+            !options || !options.hasOwnProperty('crypto') ? false : options.crypto
+        );
 
-        let bestUrls = [], bestOldUrls = [];
+        let bestUrls = [],
+            bestOldUrls = [];
         try {
             await this.connection.verifyConnectionStates();
             bestUrls = await this.connection.getApiEndpoints({filter: 'theBestOne'});
@@ -121,12 +126,24 @@ export class FidjNodeService implements IService {
             throw new FidjError(404, 'Need one connection - or too old SDK version (check update)');
         }
 
-        let theBestFirstUrl = bestUrls.length ? bestUrls[0] : bestOldUrls[0];
+        const theBestFirstUrl = bestUrls.length ? bestUrls[0] : bestOldUrls[0];
         const isLogin = this.isLoggedIn();
-        this.logger.log('fidj.sdk.service.init > verifyConnectionStates : ', theBestFirstUrl, isLogin);
+        this.logger.log(
+            'fidj.sdk.service.init > verifyConnectionStates : ',
+            theBestFirstUrl,
+            isLogin
+        );
 
-        this.connection.setClient(new connection.Client(this.connection.fidjId, theBestFirstUrl.url, this.storage, this.sdk, this.logger));
-    };
+        this.connection.setClient(
+            new connection.Client(
+                this.connection.fidjId,
+                theBestFirstUrl.url,
+                this.storage,
+                this.sdk,
+                this.logger
+            )
+        );
+    }
 
     public async login(login: string, password: string) {
         this.logger.log('fidj.sdk.service.login');
@@ -155,7 +172,9 @@ export class FidjNodeService implements IService {
         return this.connection.getUser();
     }
 
-    public async loginInDemoMode(options?: ModuleServiceLoginOptionsInterface): Promise<any | ErrorInterface> {
+    public async loginInDemoMode(
+        options?: ModuleServiceLoginOptionsInterface
+    ): Promise<any | ErrorInterface> {
         const self = this;
 
         // generate one day tokens if not set
@@ -163,20 +182,22 @@ export class FidjNodeService implements IService {
             const now = new Date();
             now.setDate(now.getDate() + 1);
             const tomorrow = now.getTime();
-            const payload = tools.Base64.encode(JSON.stringify({
-                roles: [],
-                message: 'demo',
-                apis: [],
-                endpoints: [],
-                dbs: [],
-                exp: tomorrow
-            }));
+            const payload = tools.Base64.encode(
+                JSON.stringify({
+                    roles: [],
+                    message: 'demo',
+                    apis: [],
+                    endpoints: [],
+                    dbs: [],
+                    exp: tomorrow,
+                })
+            );
             const jwtSign = tools.Base64.encode(JSON.stringify({}));
             const token = jwtSign + '.' + payload + '.' + jwtSign;
             options = {
                 accessToken: token,
                 idToken: token,
-                refreshToken: token
+                refreshToken: token,
             };
         }
 
@@ -194,22 +215,37 @@ export class FidjNodeService implements IService {
                     reject(err);
                 });
         });
-    };
+    }
 
     public isLoggedIn(): boolean {
         return this.connection.isLogin();
-    };
+    }
+
+    public needsRefresh(): boolean {
+        return !this.connection.isReady();
+    }
+
+    public isConnected() {
+        return this.connection?.isConnected();
+    }
 
     public getOwnerUser() {
         const clientUser = this.connection.getUser();
         if (clientUser?.roles.indexOf('Owner') > -1) {
-            return new OwnerUser(this, this.connection, clientUser.id, clientUser.username, clientUser.roles);
+            return new OwnerUser(
+                this,
+                this.connection,
+                clientUser.id,
+                clientUser.username,
+                clientUser.roles
+            );
         }
         return null;
     }
 
-    public async fidjGetEndpoints(filter?: EndpointFilterInterface): Promise<Array<EndpointInterface>> {
-
+    public async fidjGetEndpoints(
+        filter?: EndpointFilterInterface
+    ): Promise<Array<EndpointInterface>> {
         if (!filter) {
             filter = {showBlocked: false};
         }
@@ -222,7 +258,7 @@ export class FidjNodeService implements IService {
         endpoints = endpoints.filter((endpoint: EndpointInterface) => {
             let ok = true;
             if (ok && filter.key) {
-                ok = (endpoint.key === filter.key);
+                ok = endpoint.key === filter.key;
             }
             if (ok && !filter.showBlocked) {
                 ok = !endpoint.blocked;
@@ -230,26 +266,26 @@ export class FidjNodeService implements IService {
             return ok;
         });
         return endpoints;
-    };
+    }
 
     public async fidjRoles(): Promise<Array<any>> {
         return JSON.parse(await this.connection.getIdPayload({roles: []})).roles;
-    };
+    }
 
     public async fidjMessage(): Promise<string> {
         return JSON.parse(await this.connection.getIdPayload({message: ''})).message;
-    };
+    }
 
     public async logout(force?: boolean): Promise<void | ErrorInterface> {
         const self = this;
         if (!self.connection.getClient() && !force) {
-            return self._removeAll()
-                .then(() => {
-                    return this.session.create(self.connection.fidjId, true);
-                });
+            return self._removeAll().then(() => {
+                return this.session.create(self.connection.fidjId, true);
+            });
         }
 
-        return self.connection.logout()
+        return self.connection
+            .logout()
             .then(() => {
                 return self._removeAll();
             })
@@ -259,13 +295,15 @@ export class FidjNodeService implements IService {
             .then(() => {
                 return this.session.create(self.connection.fidjId, true);
             });
-    };
+    }
 
-    public async sync(options: {
-        forceRefresh: boolean,
-        fnInitFirstData?: (a: any) => Promise<any>,
-        fnInitFirstData_Arg?: any
-    } = {forceRefresh: false}): Promise<void | ErrorInterface> {
+    public async sync(
+        options: {
+            forceRefresh: boolean;
+            fnInitFirstData?: (a: any) => Promise<any>;
+            fnInitFirstData_Arg?: any;
+        } = {forceRefresh: false}
+    ): Promise<void | ErrorInterface> {
         this.logger.log('fidj.sdk.service.sync');
         this.logger.log('fidj.sdk.service.sync: you ar not using DB - no sync available.');
 
@@ -291,7 +329,7 @@ export class FidjNodeService implements IService {
             return;
         }
 
-        const firstSync = (this.session.dbLastSync === null);
+        const firstSync = this.session.dbLastSync === null;
 
         try {
             await this._createSession(this.connection.fidjId);
@@ -321,19 +359,22 @@ export class FidjNodeService implements IService {
             this.session.dbRecordCount = result.doc_count;
         }
         this.logger.log('fidj.sdk.service.sync _dbRecordCount : ' + this.session.dbRecordCount);
-
     }
 
     public async fidjPutInDb(data: any): Promise<string | ErrorInterface> {
         const self = this;
         self.logger.log('fidj.sdk.service.fidjPutInDb: ', data);
         if (!self.sdk.useDB) {
-            self.logger.log('fidj.sdk.service.fidjPutInDb: you are not using DB - no put available.');
+            self.logger.log(
+                'fidj.sdk.service.fidjPutInDb: you are not using DB - no put available.'
+            );
             return Promise.resolve('NA');
         }
 
         if (!self.connection.getClientId()) {
-            return self.promise.reject(new FidjError(401, 'DB put impossible. Need a user logged in.'));
+            return self.promise.reject(
+                new FidjError(401, 'DB put impossible. Need a user logged in.')
+            );
         }
         if (!self.session.isReady()) {
             return self.promise.reject(new FidjError(400, 'Need to be synchronised.'));
@@ -350,8 +391,8 @@ export class FidjNodeService implements IService {
         if (self.connection.fidjCrypto) {
             crypto = {
                 obj: self.connection,
-                method: 'encrypt'
-            }
+                method: 'encrypt',
+            };
         }
 
         return self.session.put(
@@ -360,14 +401,17 @@ export class FidjNodeService implements IService {
             self.connection.getClientId(),
             self.sdk.org,
             self.connection.fidjVersion,
-            crypto);
+            crypto
+        );
     }
 
     public async fidjRemoveInDb(data_id: string): Promise<void | ErrorInterface> {
         const self = this;
         self.logger.log('fidj.sdk.service.fidjRemoveInDb ', data_id);
         if (!self.sdk.useDB) {
-            self.logger.log('fidj.sdk.service.fidjRemoveInDb: you are not using DB - no remove available.');
+            self.logger.log(
+                'fidj.sdk.service.fidjRemoveInDb: you are not using DB - no remove available.'
+            );
             return Promise.resolve();
         }
 
@@ -376,8 +420,9 @@ export class FidjNodeService implements IService {
         }
 
         if (!data_id || typeof data_id !== 'string') {
-            return self.promise.reject(new FidjError(400, 'DB remove impossible. ' +
-                'Need the data._id.'));
+            return self.promise.reject(
+                new FidjError(400, 'DB remove impossible. ' + 'Need the data._id.')
+            );
         }
 
         return self.session.remove(data_id);
@@ -387,7 +432,9 @@ export class FidjNodeService implements IService {
         const self = this;
 
         if (!self.sdk.useDB) {
-            self.logger.log('fidj.sdk.service.fidjFindInDb: you are not using DB - no find available.');
+            self.logger.log(
+                'fidj.sdk.service.fidjFindInDb: you are not using DB - no find available.'
+            );
             return Promise.resolve();
         }
 
@@ -402,7 +449,7 @@ export class FidjNodeService implements IService {
         if (self.connection.fidjCrypto) {
             crypto = {
                 obj: self.connection,
-                method: 'decrypt'
+                method: 'decrypt',
             };
         }
 
@@ -413,7 +460,9 @@ export class FidjNodeService implements IService {
         const self = this;
 
         if (!self.sdk.useDB) {
-            self.logger.log('fidj.sdk.service.fidjFindAllInDb: you are not using DB - no find available.');
+            self.logger.log(
+                'fidj.sdk.service.fidjFindAllInDb: you are not using DB - no find available.'
+            );
             return Promise.resolve([]);
         }
 
@@ -428,19 +477,19 @@ export class FidjNodeService implements IService {
         if (self.connection.fidjCrypto) {
             crypto = {
                 obj: self.connection,
-                method: 'decrypt'
+                method: 'decrypt',
             };
         }
 
-        return self.session.getAll(crypto)
-            .then(results => {
-                self.connection.setCryptoSaltAsVerified();
-                return self.promise.resolve((results as Array<any>));
-            });
+        return self.session.getAll(crypto).then((results) => {
+            self.connection.setCryptoSaltAsVerified();
+            return self.promise.resolve(results as Array<any>);
+        });
     }
 
-    public async sendOnEndpoint(input: EndpointCallInterface): Promise<{ status: number, data?: any }> {
-
+    public async sendOnEndpoint(
+        input: EndpointCallInterface
+    ): Promise<{status: number; data?: any}> {
         await this.sync();
 
         const filter: EndpointFilterInterface = input.key ? {key: input.key} : null;
@@ -449,50 +498,51 @@ export class FidjNodeService implements IService {
             throw new FidjError(400, 'fidj.sdk.service.sendOnEndpoint : endpoint does not exist.');
         }
 
-        let firstEndpointUrl = (!endpoints || endpoints.length !== 1) ? input.defaultKeyUrl : endpoints[0].url;
+        let firstEndpointUrl =
+            !endpoints || endpoints.length !== 1 ? input.defaultKeyUrl : endpoints[0].url;
         if (input.relativePath) {
             firstEndpointUrl = urlJoin(firstEndpointUrl, input.relativePath);
         }
         const jwt = await this.connection.getIdToken();
-        let answer: { status: number, data?: any };
+        let answer: {status: number; data?: any};
         const query = new Ajax();
         switch (input.verb) {
-            case 'POST' :
+            case 'POST':
                 answer = await query.post({
                     url: firstEndpointUrl,
                     // not used : withCredentials: true,
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'Authorization': 'Bearer ' + jwt
+                        Accept: 'application/json',
+                        Authorization: 'Bearer ' + jwt,
                     },
                     data: input.data ? input.data : {},
-                    timeout: input.timeout
+                    timeout: input.timeout,
                 });
                 break;
-            case 'PUT' :
+            case 'PUT':
                 answer = await query.put({
                     url: firstEndpointUrl,
                     // not used : withCredentials: true,
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'Authorization': 'Bearer ' + jwt
+                        Accept: 'application/json',
+                        Authorization: 'Bearer ' + jwt,
                     },
                     data: input.data ? input.data : {},
-                    timeout: input.timeout
+                    timeout: input.timeout,
                 });
                 break;
-            case 'DELETE' :
+            case 'DELETE':
                 answer = await query.delete({
                     url: firstEndpointUrl,
                     // not used : withCredentials: true,
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'Authorization': 'Bearer ' + jwt
+                        Accept: 'application/json',
+                        Authorization: 'Bearer ' + jwt,
                     },
-                    timeout: input.timeout
+                    timeout: input.timeout,
                     // not used: data: data
                 });
                 break;
@@ -502,21 +552,23 @@ export class FidjNodeService implements IService {
                     // not used : withCredentials: true,
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'Authorization': 'Bearer ' + jwt
+                        Accept: 'application/json',
+                        Authorization: 'Bearer ' + jwt,
                     },
-                    timeout: input.timeout
+                    timeout: input.timeout,
                     // not used: data: data
                 });
         }
         return answer;
     }
 
-    public async fidjForgotPasswordRequest(email: String) {
-
+    public async fidjForgotPasswordRequest(email: string) {
         const bestUrls = await this.connection.getApiEndpoints({filter: 'theBestOne'});
         if (!bestUrls || bestUrls.length !== 1) {
-            throw new FidjError(400, 'fidj.sdk.service.fidjForgotPasswordRequest : api endpoint does not exist.');
+            throw new FidjError(
+                400,
+                'fidj.sdk.service.fidjForgotPasswordRequest : api endpoint does not exist.'
+            );
         }
 
         const query = new Ajax();
@@ -525,9 +577,9 @@ export class FidjNodeService implements IService {
             // not used : withCredentials: true,
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
+                Accept: 'application/json',
             },
-            data: {email}
+            data: {email},
         });
     }
 
@@ -540,7 +592,11 @@ export class FidjNodeService implements IService {
         await this.session.destroy();
     }
 
-    private async _loginInternal(login: string, password: string, updateProperties?: any): Promise<ClientTokens> {
+    private async _loginInternal(
+        login: string,
+        password: string,
+        updateProperties?: any
+    ): Promise<ClientTokens> {
         this.logger.log('fidj.sdk.service._loginInternal');
         if (!this.connection.isReady()) {
             throw new FidjError(403, 'Need an initialized FidjService');
@@ -570,11 +626,19 @@ export class FidjNodeService implements IService {
     }
 
     private _generateObjectUniqueId(appName, type?, name?) {
-
         // return null;
         const now = new Date();
-        const simpleDate = '' + now.getFullYear() + '' + now.getMonth() + '' + now.getDate()
-            + '' + now.getHours() + '' + now.getMinutes(); // new Date().toISOString();
+        const simpleDate =
+            '' +
+            now.getFullYear() +
+            '' +
+            now.getMonth() +
+            '' +
+            now.getDate() +
+            '' +
+            now.getHours() +
+            '' +
+            now.getMinutes(); // new Date().toISOString();
         const sequId = ++FidjNodeService._srvDataUniqId;
         let UId = '';
         if (appName && appName.charAt(0)) {
@@ -589,5 +653,4 @@ export class FidjNodeService implements IService {
         UId += simpleDate + '' + sequId;
         return UId;
     }
-
 }

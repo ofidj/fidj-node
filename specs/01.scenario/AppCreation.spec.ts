@@ -5,11 +5,9 @@ import {promisify} from 'util';
 const sleep = promisify(setTimeout);
 
 describe('AppCreation in Sandbox', function () {
-
     this.timeout(1000000);
 
     it('should login and create app if not already exists', async function () {
-
         // 1) Login in FIDJ
         const testName = 'test_' + new Date().getTime();
         const fidjNodeService = new FidjNodeService();
@@ -41,7 +39,9 @@ describe('AppCreation in Sandbox', function () {
         } catch (e) {
             // or already created
             expect(e.code).equal(400);
-            expect(JSON.stringify(e.message)).equal('{"status":"looks you are duplicating one application"}');
+            expect(JSON.stringify(e.message)).equal(
+                '{"status":"looks you are duplicating one application"}'
+            );
         }
         expect(createdApp.app.title).equal(testName);
         expect(createdApp.app.id).not.eq(undefined);
@@ -57,7 +57,7 @@ describe('AppCreation in Sandbox', function () {
         await fidjNodeService.logout(true);
 
         // 5) Login on this created APP
-        let appFidjService = new FidjNodeService();
+        const appFidjService = new FidjNodeService();
         await appFidjService.init(appDetails.data.app.id, {prod: false});
         await appFidjService.login(testName + '@fidj.ovh', 'test');
 
@@ -74,7 +74,5 @@ describe('AppCreation in Sandbox', function () {
         expect(ownerUser.roles.length).equal(2, JSON.stringify(ownerUser.roles));
         expect(ownerUser.roles[0]).equal('Owner');
         expect(ownerUser.roles[1]).equal('admin');
-
     });
-
 });

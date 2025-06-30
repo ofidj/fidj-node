@@ -2,14 +2,14 @@ import axios from 'axios';
 import {ErrorInterface} from '../sdk';
 
 export interface XhrOptionsInterface {
-    url: string,
-    data?: any,
-    headers?: any,
-    async?: boolean,
-    username?: string,
-    password?: string,
-    withCredentials?: boolean,
-    timeout?: number,
+    url: string;
+    data?: any;
+    headers?: any;
+    async?: boolean;
+    username?: string;
+    password?: string;
+    withCredentials?: boolean;
+    timeout?: number;
 }
 
 export enum XhrErrorReason {
@@ -24,21 +24,21 @@ export enum XhrErrorReason {
 }
 
 export interface XhrErrorInterface extends ErrorInterface {
-    status: number,
-    message: string,
-    code: number,
-    reason: XhrErrorReason,
-    data?: any,
+    status: number;
+    message: string;
+    code: number;
+    reason: XhrErrorReason;
+    data?: any;
 }
 
 export class Ajax {
+    constructor() {}
 
-    constructor() {
-    }
-
-    private static formatResponseData(response: any): { status: number, data?: any } {
-
-        if (response?.status && (parseInt(response.status, 10) < 200 || parseInt(response.status, 10) >= 300)) {
+    private static formatResponseData(response: any): {status: number; data?: any} {
+        if (
+            response?.status &&
+            (parseInt(response.status, 10) < 200 || parseInt(response.status, 10) >= 300)
+        ) {
             throw Ajax.formatError(response);
         }
 
@@ -50,14 +50,12 @@ export class Ajax {
 
         try {
             data = JSON.parse(response.data);
-        } catch (e) {
-        }
+        } catch (e) {}
 
         return {status, data};
-    };
+    }
 
     private static formatError(error: any): XhrErrorInterface {
-
         const errorFormatted: XhrErrorInterface = {
             reason: XhrErrorReason.UNKNOWN,
             status: 500,
@@ -82,13 +80,13 @@ export class Ajax {
                 errorFormatted.reason = XhrErrorReason.STATUS;
                 errorFormatted.status = parseInt(error.response.status, 10);
                 errorFormatted.code = parseInt(error.response.status, 10);
-            } else if (error.response.status === null) { // timeout
+            } else if (error.response.status === null) {
+                // timeout
                 errorFormatted.reason = XhrErrorReason.TIMEOUT;
                 errorFormatted.status = 408;
                 errorFormatted.code = 408;
             }
         } else {
-
             if (error.code === XhrErrorReason.ECONNREFUSED) {
                 errorFormatted.reason = XhrErrorReason.ECONNREFUSED;
                 errorFormatted.status = 503;
@@ -119,19 +117,17 @@ export class Ajax {
         }
 
         return errorFormatted;
-    };
-
+    }
 
     /**
      * @throws XhrErrorInterface
      * @param args
      */
-    public async post(args: XhrOptionsInterface): Promise<{ status: number, data?: any }> {
-
+    public async post(args: XhrOptionsInterface): Promise<{status: number; data?: any}> {
         const opt: any = {
             method: 'POST',
             url: args.url,
-            data: JSON.stringify(args.data)
+            data: typeof args.data === 'string' ? args.data : JSON.stringify(args.data),
         };
         if (args.headers) {
             opt.headers = args.headers;
@@ -150,18 +146,17 @@ export class Ajax {
         }
 
         return Ajax.formatResponseData(res);
-
     }
 
     /**
      * @throws XhrErrorInterface
      * @param args
      */
-    public async put(args: XhrOptionsInterface): Promise<{ status: number, data?: any }> {
+    public async put(args: XhrOptionsInterface): Promise<{status: number; data?: any}> {
         const opt: any = {
             method: 'PUT',
             url: args.url,
-            data: JSON.stringify(args.data)
+            data: typeof args.data === 'string' ? args.data : JSON.stringify(args.data),
         };
         if (args.headers) {
             opt.headers = args.headers;
@@ -184,11 +179,11 @@ export class Ajax {
      * @throws XhrErrorInterface
      * @param args
      */
-    public async delete(args: XhrOptionsInterface): Promise<{ status: number, data?: any }> {
+    public async delete(args: XhrOptionsInterface): Promise<{status: number; data?: any}> {
         const opt: any = {
             method: 'DELETE',
             url: args.url,
-            data: JSON.stringify(args.data)
+            data: typeof args.data === 'string' ? args.data : JSON.stringify(args.data),
         };
         if (args.headers) {
             opt.headers = args.headers;
@@ -211,10 +206,10 @@ export class Ajax {
      * @throws XhrErrorInterface
      * @param args
      */
-    public async get(args: XhrOptionsInterface): Promise<{ status: number, data?: any }> {
+    public async get(args: XhrOptionsInterface): Promise<{status: number; data?: any}> {
         const opt: any = {
             method: 'GET',
-            url: args.url
+            url: args.url,
         };
         if (args.data) {
             opt.data = args.data;

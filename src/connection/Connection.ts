@@ -1,5 +1,12 @@
 import {Client} from './Client';
-import {EndpointInterface, ErrorInterface, FidjError, LoggerInterface, ModuleServiceLoginOptionsInterface, SdkInterface} from '../sdk';
+import {
+    EndpointInterface,
+    ErrorInterface,
+    FidjError,
+    LoggerInterface,
+    ModuleServiceLoginOptionsInterface,
+    SdkInterface,
+} from '../sdk';
 import {Base64, LocalStorage, Xor} from '../tools';
 import {Ajax} from './Ajax';
 import {ConnectionFindOptionsInterface} from './Interfaces';
@@ -8,7 +15,6 @@ import {ClientTokens} from './ClientTokens';
 import {ClientToken} from './ClientToken';
 
 export class Connection {
-
     public fidjId: string;
     public fidjVersion: string;
     public fidjCrypto: boolean;
@@ -23,26 +29,27 @@ export class Connection {
     private accessTokenPrevious: string;
     private idToken: string;
     private refreshToken: string;
-    private states: { [s: string]: { state: boolean, time: number, lastTimeWasOk: number }; }; // Map<string, boolean>;
+    private states: {[s: string]: {state: boolean; time: number; lastTimeWasOk: number}}; // Map<string, boolean>;
     private apis: Array<EndpointInterface>;
     private cryptoSalt: string;
     private cryptoSaltNext: string;
     private client: Client;
     private user: ClientUser;
 
-    constructor(private _sdk: SdkInterface,
-                private _storage: LocalStorage,
-                private _logger: LoggerInterface) {
+    constructor(
+        private _sdk: SdkInterface,
+        private _storage: LocalStorage,
+        private _logger: LoggerInterface
+    ) {
         this.client = null;
         this.user = null;
-    };
+    }
 
     isReady(): boolean {
         return !!this.client && this.client.isReady();
     }
 
     async init(fidjVersion: string, fidjId: string, fidjCrypto: boolean) {
-
         this.fidjId = fidjId;
         this.fidjVersion = fidjVersion;
         this.fidjCrypto = fidjCrypto;
@@ -66,7 +73,6 @@ export class Connection {
     }
 
     async destroy(force?: boolean) {
-
         this._storage.remove(this._accessToken);
         this._storage.remove(this._idToken);
         this._storage.remove(this._refreshToken);
@@ -95,7 +101,6 @@ export class Connection {
     }
 
     setClient(client: Client): void {
-
         this.client = client;
         // if (!this.user) {
         //     this.user = new ClientUser();
@@ -143,7 +148,6 @@ export class Connection {
     }
 
     encrypt(data: any): string {
-
         if (typeof data !== 'string') {
             data = JSON.stringify(data);
         } else {
@@ -196,7 +200,6 @@ export class Connection {
         }
 
         try {
-
             if (!decrypted) {
                 decrypted = JSON.parse(data);
             }
@@ -204,7 +207,6 @@ export class Connection {
             if (decrypted && decrypted.string) {
                 decrypted = decrypted.string;
             }
-
         } catch (err) {
             decrypted = null;
         }
@@ -217,11 +219,13 @@ export class Connection {
         try {
             const payload = this.refreshToken.split('.')[1];
             const decoded = JSON.parse(Base64.decode(payload));
-            exp = ((new Date().getTime() / 1000) >= decoded.exp);
-
-        } catch (e) {
-        }
+            exp = new Date().getTime() / 1000 >= decoded.exp;
+        } catch (e) {}
         return !exp;
+    }
+
+    isConnected() {
+        return this.client?.status();
     }
 
     // todo reintegrate client.login()
@@ -242,7 +246,6 @@ export class Connection {
     }
 
     async getIdPayload(def?: any) {
-
         const idToken = await this.getIdToken();
 
         try {
@@ -277,8 +280,7 @@ export class Connection {
             if (payload) {
                 return Base64.decode(payload);
             }
-        } catch (e) {
-        }
+        } catch (e) {}
         return def ? def : null;
     }
 
@@ -292,8 +294,7 @@ export class Connection {
             if (payload) {
                 return Base64.decode(payload);
             }
-        } catch (e) {
-        }
+        } catch (e) {}
         return def ? def : null;
     }
 
@@ -301,7 +302,6 @@ export class Connection {
      * @throws ErrorInterface
      */
     async refreshConnection(force = false) {
-
         if (force) {
             this.removingCurrentTokens();
         }
@@ -310,9 +310,12 @@ export class Connection {
         if (this.accessToken) {
             const payload = this.accessToken.split('.')[1];
             const decoded = Base64.decode(payload);
-            const notExpired = (new Date().getTime() / 1000) < JSON.parse(decoded).exp;
+            const notExpired = new Date().getTime() / 1000 < JSON.parse(decoded).exp;
             // console.log('new Date().getTime() < JSON.parse(decoded).exp :', (new Date().getTime() / 1000), JSON.parse(decoded).exp);
-            this._logger.log('fidj.connection.connection.refreshConnection : token not expired ? ', notExpired);
+            this._logger.log(
+                'fidj.connection.connection.refreshConnection : token not expired ? ',
+                notExpired
+            );
             if (notExpired) {
                 return this.updatedClientTokens();
             }
@@ -322,8 +325,11 @@ export class Connection {
         if (this.refreshToken) {
             const payload = this.refreshToken.split('.')[1];
             const decoded = Base64.decode(payload);
-            const expired = (new Date().getTime() / 1000) >= JSON.parse(decoded).exp;
-            this._logger.log('fidj.connection.connection.refreshConnection : refreshToken not expired ? ', expired);
+            const expired = new Date().getTime() / 1000 >= JSON.parse(decoded).exp;
+            this._logger.log(
+                'fidj.connection.connection.refreshConnection : refreshToken not expired ? ',
+                expired
+            );
             if (expired) {
                 this._storage.remove(this._refreshToken);
             }
@@ -339,12 +345,14 @@ export class Connection {
             throw new FidjError(400, 'Need an initialized client.');
         }
 
-        const {createdAccessToken, createdIdToken} = await this.client.reAuthenticate(this.refreshToken);
+        const {createdAccessToken, createdIdToken} = await this.client.reAuthenticate(
+            this.refreshToken
+        );
         this.accessToken = createdAccessToken.data;
         this.idToken = createdIdToken.data;
 
         return this.updatedClientTokens();
-    };
+    }
 
     async setConnection(clientTokens: ClientTokens) {
         if (!clientTokens) {
@@ -375,14 +383,14 @@ export class Connection {
 
         // expose roles, message
         const clientUser = new ClientUser(
-            clientTokens.username, clientTokens.username,
-            JSON.parse(await this.getIdPayload({roles: []})).roles,
+            clientTokens.username,
+            clientTokens.username,
+            JSON.parse(await this.getIdPayload({roles: []})).roles
         );
         this.setUser(clientUser);
-    };
+    }
 
     async setConnectionOffline(options: ModuleServiceLoginOptionsInterface) {
-
         if (options.accessToken) {
             this.accessToken = options.accessToken;
             this._storage.set(this._accessToken, this.accessToken);
@@ -396,15 +404,16 @@ export class Connection {
             this._storage.set(this._refreshToken, this.refreshToken);
         }
 
-        this.setUser(new ClientUser('demo', 'demo',
-            JSON.parse(await this.getIdPayload({roles: []})).roles,
-        ));
+        this.setUser(
+            new ClientUser('demo', 'demo', JSON.parse(await this.getIdPayload({roles: []})).roles)
+        );
     }
 
-    async getApiEndpoints(options?: ConnectionFindOptionsInterface): Promise<Array<EndpointInterface>> {
-
+    async getApiEndpoints(
+        options?: ConnectionFindOptionsInterface
+    ): Promise<Array<EndpointInterface>> {
         let ea: EndpointInterface[] = [
-            {key: 'fidj.default', url: 'https://api.fidj.ovh/v3', blocked: false}
+            {key: 'fidj.default', url: 'https://api.fidj.ovh/v3', blocked: false},
         ];
         let filteredEa = [];
 
@@ -429,7 +438,9 @@ export class Connection {
         }
 
         if (this.accessTokenPrevious) {
-            const apiEndpoints: EndpointInterface[] = JSON.parse(this.getPreviousAccessPayload({apis: []})).apis;
+            const apiEndpoints: EndpointInterface[] = JSON.parse(
+                this.getPreviousAccessPayload({apis: []})
+            ).apis;
             if (apiEndpoints && apiEndpoints.length) {
                 apiEndpoints.forEach((endpoint) => {
                     if (endpoint.url && ea.filter((r) => r.url === endpoint.url).length === 0) {
@@ -443,7 +454,7 @@ export class Connection {
 
         let couldCheckStates = true;
         if (this.states && Object.keys(this.states).length) {
-            for (let i = 0; (i < ea.length) && couldCheckStates; i++) {
+            for (let i = 0; i < ea.length && couldCheckStates; i++) {
                 if (!this.states[ea[i].url]) {
                     couldCheckStates = false;
                 }
@@ -454,21 +465,23 @@ export class Connection {
 
         if (options?.filter) {
             if (couldCheckStates && options.filter === 'theBestOne') {
-                for (let i = 0; (i < ea.length) && (filteredEa.length === 0); i++) {
+                for (let i = 0; i < ea.length && filteredEa.length === 0; i++) {
                     const endpoint = ea[i];
-                    if (this.states[endpoint.url] &&
-                        this.states[endpoint.url].state) {
+                    if (this.states[endpoint.url] && this.states[endpoint.url].state) {
                         filteredEa.push(endpoint);
                     }
                 }
             } else if (couldCheckStates && options.filter === 'theBestOldOne') {
                 let bestOldOne: EndpointInterface;
-                for (let i = 0; (i < ea.length); i++) {
+                for (let i = 0; i < ea.length; i++) {
                     const endpoint = ea[i];
-                    if (this.states[endpoint.url] &&
+                    if (
+                        this.states[endpoint.url] &&
                         this.states[endpoint.url].lastTimeWasOk &&
-                        (!bestOldOne || this.states[endpoint.url].lastTimeWasOk > this.states[bestOldOne.url].lastTimeWasOk)) {
-
+                        (!bestOldOne ||
+                            this.states[endpoint.url].lastTimeWasOk >
+                                this.states[bestOldOne.url].lastTimeWasOk)
+                    ) {
                         bestOldOne = endpoint;
                     }
                 }
@@ -483,10 +496,9 @@ export class Connection {
         }
 
         return filteredEa;
-    };
+    }
 
     async getDBs(options?: ConnectionFindOptionsInterface): Promise<EndpointInterface[]> {
-
         if (!this.accessToken) {
             return [];
         }
@@ -505,7 +517,7 @@ export class Connection {
         let filteredDBs = [];
         let couldCheckStates = true;
         if (this.states && Object.keys(this.states).length) {
-            for (let i = 0; (i < dbs.length) && couldCheckStates; i++) {
+            for (let i = 0; i < dbs.length && couldCheckStates; i++) {
                 if (!this.states[dbs[i].url]) {
                     couldCheckStates = false;
                 }
@@ -515,18 +527,16 @@ export class Connection {
         }
 
         if (couldCheckStates && options && options.filter === 'theBestOne') {
-            for (let i = 0; (i < dbs.length) && (filteredDBs.length === 0); i++) {
+            for (let i = 0; i < dbs.length && filteredDBs.length === 0; i++) {
                 const endpoint = dbs[i];
-                if (this.states[endpoint.url] &&
-                    this.states[endpoint.url].state) {
+                if (this.states[endpoint.url] && this.states[endpoint.url].state) {
                     filteredDBs.push(endpoint);
                 }
             }
         } else if (couldCheckStates && options && options.filter === 'theBestOnes') {
-            for (let i = 0; (i < dbs.length); i++) {
+            for (let i = 0; i < dbs.length; i++) {
                 const endpoint = dbs[i];
-                if (this.states[endpoint.url] &&
-                    this.states[endpoint.url].state) {
+                if (this.states[endpoint.url] && this.states[endpoint.url].state) {
                     filteredDBs.push(endpoint);
                 }
             }
@@ -537,10 +547,9 @@ export class Connection {
         }
 
         return filteredDBs;
-    };
+    }
 
     async verifyConnectionStates(): Promise<any | ErrorInterface> {
-
         const currentTime = new Date().getTime();
 
         // todo need verification ? not yet (cache)
@@ -570,13 +579,18 @@ export class Connection {
             }
             const verified = await this.verifyDbState(currentTime, dbEndpoint);
         }
-    };
+    }
 
     protected async updatedClientTokens() {
         const accessToken = new ClientToken(this.getClientId(), 'accessToken', this.accessToken);
         const idToken = new ClientToken(this.getClientId(), 'idToken', this.idToken);
         const refreshToken = new ClientToken(this.getClientId(), 'refreshToken', this.refreshToken);
-        const clientTokens = new ClientTokens(this.getClientId(), accessToken, idToken, refreshToken);
+        const clientTokens = new ClientTokens(
+            this.getClientId(),
+            accessToken,
+            idToken,
+            refreshToken
+        );
         await this.setConnection(clientTokens);
         return clientTokens;
     }
@@ -594,31 +608,41 @@ export class Connection {
     }
 
     private async verifyApiState(currentTime: number, endpointUrl: string) {
-
         try {
-
             this._logger.log('fidj.sdk.connection.verifyApiState : ', currentTime, endpointUrl);
 
-            const data = (await new Ajax().get({
-                url: endpointUrl + '/status?isOk=' + this._sdk.version,
-                headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
-            })).data;
+            const data = (
+                await new Ajax().get({
+                    url: endpointUrl + '/status?isOk=' + this._sdk.version,
+                    headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+                })
+            ).data;
 
             let state = false;
             if (data && data.isOk) {
                 state = true;
             }
-            this.states[endpointUrl] = {state: state, time: currentTime, lastTimeWasOk: currentTime};
+            this.states[endpointUrl] = {
+                state: state,
+                time: currentTime,
+                lastTimeWasOk: currentTime,
+            };
 
             this._logger.log('fidj.sdk.connection.verifyApiState > states : ', this.states);
-
         } catch (err) {
-            this._logger.log('fidj.sdk.connection.verifyApiState > catch pb  - states : ', endpointUrl);
+            this._logger.log(
+                'fidj.sdk.connection.verifyApiState > catch pb  - states : ',
+                endpointUrl
+            );
             let lastTimeWasOk = 0;
             if (this.states[endpointUrl]) {
                 lastTimeWasOk = this.states[endpointUrl].lastTimeWasOk;
             }
-            this.states[endpointUrl] = {state: false, time: currentTime, lastTimeWasOk: lastTimeWasOk};
+            this.states[endpointUrl] = {
+                state: false,
+                time: currentTime,
+                lastTimeWasOk: lastTimeWasOk,
+            };
         }
 
         // store states
@@ -626,29 +650,30 @@ export class Connection {
     }
 
     private async verifyDbState(currentTime: number, dbEndpoint: string) {
-
         try {
             // console.log('verifyDbState: ', dbEndpoint);
             await new Ajax().get({
                 url: dbEndpoint,
-                headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+                headers: {'Content-Type': 'application/json', Accept: 'application/json'},
             });
 
             this.states[dbEndpoint] = {state: true, time: currentTime, lastTimeWasOk: currentTime};
             // resolve();
             // console.log('verifyDbState: state', dbEndpoint, true);
-
         } catch (err) {
             let lastTimeWasOk = 0;
             if (this.states[dbEndpoint]) {
                 lastTimeWasOk = this.states[dbEndpoint].lastTimeWasOk;
             }
-            this.states[dbEndpoint] = {state: false, time: currentTime, lastTimeWasOk: lastTimeWasOk};
+            this.states[dbEndpoint] = {
+                state: false,
+                time: currentTime,
+                lastTimeWasOk: lastTimeWasOk,
+            };
             // resolve();
         }
 
         // store states
         this._storage.set(this._states, this.states);
     }
-
 }

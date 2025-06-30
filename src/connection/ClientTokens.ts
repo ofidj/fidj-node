@@ -5,6 +5,6 @@ export class ClientTokens {
         public username: string,
         public accessToken: ClientToken,
         public idToken: ClientToken,
-        public refreshToken: ClientToken) {
-    }
+        public refreshToken: ClientToken
+    ) {}
 }

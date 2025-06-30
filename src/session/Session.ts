@@ -13,12 +13,11 @@ const FidjPouch = null;
 // }
 
 export interface SessionCryptoInterface {
-    obj: Object,
-    method: string
+    obj: object;
+    method: string;
 }
 
 export class Session {
-
     public dbRecordCount: number;
     public dbLastSync: number; // Date().getTime();
 
@@ -33,17 +32,17 @@ export class Session {
         this.dbLastSync = null;
         this.remoteDb = null;
         this.dbs = [];
-    };
+    }
 
     static write(item: any): string {
         let value = 'null';
-        const t = typeof (item);
+        const t = typeof item;
         if (t === 'undefined') {
             value = 'null';
         } else if (value === null) {
             value = 'null';
         } else if (t === 'string') {
-            value = JSON.stringify({string: item})
+            value = JSON.stringify({string: item});
         } else if (t === 'number') {
             value = JSON.stringify({number: item});
         } else if (t === 'boolean') {
@@ -56,7 +55,7 @@ export class Session {
 
     static value(item: any): any {
         let result = item;
-        if (typeof (item) !== 'object') {
+        if (typeof item !== 'object') {
             // return item;
         } else if ('string' in item) {
             result = item.string;
@@ -66,7 +65,7 @@ export class Session {
             result = item.bool.valueOf();
         } else if ('json' in item) {
             result = item.json;
-            if (typeof (result) !== 'object') {
+            if (typeof result !== 'object') {
                 result = JSON.parse(result);
             }
         }
@@ -78,13 +77,13 @@ export class Session {
         if (!item) {
             return null;
         }
-        if (typeof (item) === 'object' && 'json' in item) {
+        if (typeof item === 'object' && 'json' in item) {
             result = item.json;
         }
-        if (typeof (result) === 'string') {
+        if (typeof result === 'string') {
             result = JSON.parse(result);
         }
-        if (typeof (result) === 'object' && 'json' in result) {
+        if (typeof result === 'object' && 'json' in result) {
             result = (result as any).json;
         }
         if (typeof result !== 'object') {
@@ -98,7 +97,6 @@ export class Session {
     }
 
     public create(uid: string, force?: boolean): Promise<any | ErrorInterface> {
-
         if (!force && this.db) {
             return Promise.resolve(this.db);
         }
@@ -113,7 +111,6 @@ export class Session {
         }
 
         return new Promise((resolve, reject) => {
-
             let opts: any = {location: 'default'};
             try {
                 if (window['cordova']) {
@@ -126,9 +123,9 @@ export class Session {
                 this.db = new FidjPouch('fidj_db_' + uid, opts); // , {adapter: 'websql'} ???
                 // }
 
-                this.db.info()
+                this.db
+                    .info()
                     .then((info) => {
-
                         // todo if (info.adapter !== 'websql') {
                         return resolve(this.db);
                         // }
@@ -145,10 +142,10 @@ export class Session {
                         //     .catch((err) => {
                         //         reject(new FidjError(400, err.toString()))
                         //     });
-
-                    }).catch((err) => {
-                    reject(new FidjError(400, err));
-                });
+                    })
+                    .catch((err) => {
+                        reject(new FidjError(400, err));
+                    });
             } catch (err) {
                 reject(new FidjError(500, err));
             }
@@ -156,7 +153,6 @@ export class Session {
     }
 
     public async destroy(): Promise<void> {
-
         if (!this.db) {
             this.dbRecordCount = 0;
             this.dbLastSync = null;
@@ -179,14 +175,13 @@ export class Session {
                 }
             });
         });
-    };
+    }
 
     public setRemote(dbs: Array<EndpointInterface>): void {
         this.dbs = dbs;
     }
 
     public sync(userId: string): Promise<void | ErrorInterface> {
-
         if (!this.db) {
             return Promise.reject(new FidjError(408, 'need db'));
         }
@@ -196,7 +191,6 @@ export class Session {
 
         return new Promise((resolve, reject) => {
             try {
-
                 if (!FidjPouch) {
                     return;
                 }
@@ -207,13 +201,14 @@ export class Session {
                     // todo , {headers: {'Authorization': 'Bearer ' + id_token}});
                 }
 
-                this.db.replicate.to(this.remoteDb)
+                this.db.replicate
+                    .to(this.remoteDb)
                     .on('complete', (info) => {
-                        return this.remoteDb.replicate.to(this.db,
-                            {
+                        return this.remoteDb.replicate
+                            .to(this.db, {
                                 filter: (doc) => {
-                                    return (!!userId && !!doc && doc.fidjUserId === userId);
-                                }
+                                    return !!userId && !!doc && doc.fidjUserId === userId;
+                                },
                             })
                             .on('complete', () => {
                                 // this.logger
@@ -221,24 +216,23 @@ export class Session {
                             })
                             .on('denied', (err) => reject({code: 403, reason: {second: err}}))
                             .on('error', (err) => reject({code: 401, reason: {second: err}}));
-
                     })
                     .on('denied', (err) => reject({code: 403, reason: {first: err}}))
                     .on('error', (err) => reject({code: 401, reason: {first: err}}));
-
             } catch (err) {
                 reject(new FidjError(500, err));
             }
         });
     }
 
-    public put(data: any,
-               _id: string,
-               uid: string,
-               oid: string,
-               ave: string,
-               crypto?: SessionCryptoInterface): Promise<any | ErrorInterface> {
-
+    public put(
+        data: any,
+        _id: string,
+        uid: string,
+        oid: string,
+        ave: string,
+        crypto?: SessionCryptoInterface
+    ): Promise<any | ErrorInterface> {
         if (!this.db) {
             return Promise.reject(new FidjError(408, 'need db'));
         }
@@ -252,7 +246,7 @@ export class Session {
             _id: _id,
             fidjUserId: uid,
             fidjOrgId: oid,
-            fidjAppVersion: ave
+            fidjAppVersion: ave,
         };
         if (dataWithoutIds._rev) {
             toStore._rev = '' + dataWithoutIds._rev;
@@ -285,7 +279,6 @@ export class Session {
                     } else {
                         resolve(response.id);
                     }
-
                 } else {
                     reject(new FidjError(500, err));
                 }
@@ -294,13 +287,13 @@ export class Session {
     }
 
     public remove(data_id: string): Promise<void | ErrorInterface> {
-
         if (!this.db) {
             return Promise.reject(new FidjError(408, 'need db'));
         }
 
         return new Promise((resolve, reject) => {
-            this.db.get(data_id)
+            this.db
+                .get(data_id)
                 .then((doc) => {
                     doc._deleted = true;
                     return this.db.put(doc);
@@ -315,14 +308,14 @@ export class Session {
     }
 
     public get(data_id: string, crypto?: SessionCryptoInterface): Promise<any | ErrorInterface> {
-
         if (!this.db) {
             return Promise.reject(new FidjError(408, 'Need db'));
         }
 
         return new Promise((resolve, reject) => {
-            this.db.get(data_id)
-                .then(row => {
+            this.db
+                .get(data_id)
+                .then((row) => {
                     if (!!row && (!!row.fidjDacr || !!row.fidjData)) {
                         let data = row.fidjDacr;
                         if (crypto && data) {
@@ -344,21 +337,21 @@ export class Session {
                         reject(new FidjError(400, 'No data found'));
                     }
                 })
-                .catch(err => reject(new FidjError(500, err)));
+                .catch((err) => reject(new FidjError(500, err)));
         });
     }
 
     public getAll(crypto?: SessionCryptoInterface): Promise<Array<any> | ErrorInterface> {
-
         if (!this.db || !(this.db as any).allDocs) {
             return Promise.reject(new FidjError(408, 'Need a valid db'));
         }
 
         return new Promise((resolve, reject) => {
-            (this.db as any).allDocs({include_docs: true, descending: true})
-                .then(rows => {
+            (this.db as any)
+                .allDocs({include_docs: true, descending: true})
+                .then((rows) => {
                     const all = [];
-                    rows.rows.forEach(row => {
+                    rows.rows.forEach((row) => {
                         if (!!row && !!row.doc._id && (!!row.doc.fidjDacr || !!row.doc.fidjData)) {
                             let data = row.doc.fidjDacr;
                             if (crypto && data) {
@@ -386,23 +379,23 @@ export class Session {
                     });
                     resolve(all);
                 })
-                .catch(err => reject(new FidjError(400, err)));
+                .catch((err) => reject(new FidjError(400, err)));
         });
     }
 
     public isEmpty(): Promise<boolean | ErrorInterface> {
-
         if (!this.db || !(this.db as any).allDocs) {
             return Promise.reject(new FidjError(408, 'No db'));
         }
 
         return new Promise((resolve, reject) => {
-            (this.db as any).allDocs({
-                // filter:  (doc) => {
-                //    if (!self.connection.user || !self.connection.user._id) return doc;
-                //    if (doc.fidjUserId === self.connection.user._id) return doc;
-                // }
-            })
+            (this.db as any)
+                .allDocs({
+                    // filter:  (doc) => {
+                    //    if (!self.connection.user || !self.connection.user._id) return doc;
+                    //    if (doc.fidjUserId === self.connection.user._id) return doc;
+                    // }
+                })
                 .then((response) => {
                     if (!response) {
                         reject(new FidjError(400, 'No response'));
@@ -425,5 +418,4 @@ export class Session {
         }
         return this.db.info();
     }
-
 }

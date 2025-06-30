@@ -1,8 +1,11 @@
-import {EndpointCallInterface, ModuleServiceInitOptionsInterface, ModuleServiceLoginOptionsInterface} from './Interfaces';
+import {
+    EndpointCallInterface,
+    ModuleServiceInitOptionsInterface,
+    ModuleServiceLoginOptionsInterface,
+} from './Interfaces';
 import {ClientUser} from '../connection';
 
 export interface IService {
-
     /**
      * @throws ErrorInterface
      * @param fidjId
@@ -27,5 +30,5 @@ export interface IService {
      * @throws ErrorInterface
      * @param input
      */
-    sendOnEndpoint(input: EndpointCallInterface): Promise<{ status: number, data?: any }>;
+    sendOnEndpoint(input: EndpointCallInterface): Promise<{status: number; data?: any}>;
 }

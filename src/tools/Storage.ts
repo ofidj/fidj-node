@@ -1,4 +1,4 @@
-const isNodeContext = () => (typeof window === 'undefined');
+const isNodeContext = () => typeof window === 'undefined';
 
 interface IStorage {
     getItem(key: string): any;
@@ -9,8 +9,7 @@ interface IStorage {
 }
 
 class SimpleMemoryStorage implements IStorage {
-    constructor(private mem: any = {}) {
-    }
+    constructor(private mem: any = {}) {}
 
     setItem(key: string, value: any) {
         this.mem[key] = value;
@@ -26,7 +25,6 @@ class SimpleMemoryStorage implements IStorage {
 }
 
 export class LocalStorage {
-
     public version = '0.1';
     private readonly storage: IStorage;
 
@@ -48,17 +46,16 @@ export class LocalStorage {
      * @returns the stored value which is a container of user value.
      */
     set(key: string, value: any) {
-
         key = this.storageKey + key;
         this.checkKey(key);
         // clone the object before saving to storage
-        const t = typeof (value);
+        const t = typeof value;
         if (t === 'undefined') {
             value = 'null';
         } else if (value === null) {
             value = 'null';
         } else if (t === 'string') {
-            value = JSON.stringify({string: value})
+            value = JSON.stringify({string: value});
         } else if (t === 'number') {
             value = JSON.stringify({number: value});
         } else if (t === 'boolean') {
@@ -68,11 +65,15 @@ export class LocalStorage {
         } else {
             // reject and do not insert
             // if (typeof value == "function") for example
-            throw new TypeError('Value type ' + t + ' is invalid. It must be null, undefined, xml, string, number, boolean or object');
+            throw new TypeError(
+                'Value type ' +
+                    t +
+                    ' is invalid. It must be null, undefined, xml, string, number, boolean or object'
+            );
         }
         this.storage.setItem(key, value);
         return value;
-    };
+    }
 
     /**
      * Looks up a key in cache
@@ -102,10 +103,9 @@ export class LocalStorage {
                     return value.json;
                 }
             }
-        } catch (e) {
-        }
+        } catch (e) {}
         return !def ? null : def;
-    };
+    }
 
     /**
      * Deletes a key from cache.
@@ -122,10 +122,10 @@ export class LocalStorage {
             this.storage.removeItem(key);
         }
         return existed;
-    };
+    }
 
     private checkKey(key: string) {
-        if (!key || (typeof key !== 'string')) {
+        if (!key || typeof key !== 'string') {
             throw new TypeError('Key type must be string');
         }
         return true;

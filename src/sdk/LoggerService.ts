@@ -1,7 +1,6 @@
 import {LoggerInterface, LoggerLevelEnum} from './Interfaces';
 
 export class LoggerService implements LoggerInterface {
-
     constructor(private level?: LoggerLevelEnum) {
         if (!level) {
             this.level = LoggerLevelEnum.ERROR;
@@ -25,7 +24,11 @@ export class LoggerService implements LoggerInterface {
     }
 
     error(message: string, args: [any]) {
-        if (this.level === LoggerLevelEnum.INFO || this.level === LoggerLevelEnum.WARN || this.level === LoggerLevelEnum.ERROR) {
+        if (
+            this.level === LoggerLevelEnum.INFO ||
+            this.level === LoggerLevelEnum.WARN ||
+            this.level === LoggerLevelEnum.ERROR
+        ) {
             console.error(message, args);
         }
     }

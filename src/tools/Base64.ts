@@ -1,8 +1,4 @@
 export class Base64 {
-
-    constructor() {
-    };
-
     /**
      * Decodes string from Base64 string
      */
@@ -14,11 +10,12 @@ export class Base64 {
         const base64 = require('base-64');
         // const _btoa = typeof window !== 'undefined' ? window.btoa : (a) => a;
 
-        let result = ''
+        let result = '';
         try {
             result = encodeURIComponent(input);
-            result = result.replace(/%([0-9A-F]{2})/g,
-                (match, p1) => String.fromCharCode(parseInt('0x' + p1, 16)))
+            result = result.replace(/%([0-9A-F]{2})/g, (match, p1) =>
+                String.fromCharCode(parseInt('0x' + p1, 16))
+            );
             result = base64.encode(result);
         } catch (e) {
             console.error(e);
@@ -27,7 +24,6 @@ export class Base64 {
     }
 
     public static decode(input: string): string {
-
         if (!input) {
             return null;
         }
@@ -35,13 +31,15 @@ export class Base64 {
         const base64 = require('base-64');
         // TODO const _atob = typeof window !== 'undefined' ? window.atob : import 'atob';
         // const _atob = window.atob;
-        let result = ''
+        let result = '';
         try {
             result = base64.decode(input);
             const results = result.split('');
-            result = results.map((c) => {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join('');
+            result = results
+                .map((c) => {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                })
+                .join('');
             result = decodeURIComponent(result);
         } catch (e) {
             console.error(e);

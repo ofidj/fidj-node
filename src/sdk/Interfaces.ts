@@ -23,9 +23,8 @@ export interface EndpointCallInterface {
     // in case of key not found
     defaultKeyUrl?: string;
 
-    timeout?: number
+    timeout?: number;
 }
-
 
 /**
  * prod : true by default
@@ -34,30 +33,30 @@ export interface EndpointCallInterface {
  * logLevel : NONE by default
  */
 export interface ModuleServiceInitOptionsInterface {
-    prod: boolean,
-    useDB?: boolean,
-    crypto?: boolean,
-    logLevel?: LoggerLevelEnum
+    prod: boolean;
+    useDB?: boolean;
+    crypto?: boolean;
+    logLevel?: LoggerLevelEnum;
 }
 
 export interface ModuleServiceLoginOptionsInterface {
-    accessToken?: string,
-    idToken?: string,
-    refreshToken?: string,
+    accessToken?: string;
+    idToken?: string;
+    refreshToken?: string;
 }
 
 export interface SdkInterface {
-    org: string,
-    version: string,
-    prod: boolean,
-    useDB: boolean
+    org: string;
+    version: string;
+    prod: boolean;
+    useDB: boolean;
 }
 
 export enum LoggerLevelEnum {
     INFO = 1,
     WARN = 2,
     ERROR = 3,
-    NONE = 4
+    NONE = 4,
 }
 
 export interface LoggerInterface {

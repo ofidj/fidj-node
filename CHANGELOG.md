@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- needsRefresh() and isConnected()
+
+### Changed
+
+- Linted and prettier
+
+## [15.1.12] - 2025-05-25
+
 ### Changed
 
 - Updated CI workflow configuration
