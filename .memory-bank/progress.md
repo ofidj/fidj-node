@@ -61,16 +61,16 @@
 
 ## Current Status
 
-The library is currently at version 15.1.10 and is stable for production use. Recent improvements include:
+The library is currently at version 15.1.13 and is stable for production use. Recent improvements include:
 
-- Fixed auto createdUser functionality
-- Fixed refreshConnection functionality
-- Added endpoint error handling
+- Added needsRefresh() and isConnected() methods
+- Enhanced error handling for endpoints
 - Improved synchronization in sendOnEndpoint
-- Added unit tests for improved code quality
+- Code linting and formatting improvements
 - Updated dependencies to latest versions
+- Additional unit tests for improved code quality
 
-The library is ready for release with these improvements.
+The library is actively maintained and continues to be enhanced with new features and improvements.
 
 ## Known Issues
 
@@ -86,12 +86,12 @@ The library is ready for release with these improvements.
 
 ## Release Readiness
 
-The current version (15.1.10) is ready for release with the following completed:
+The current version (15.1.13) has been released with the following completed:
 
 - All critical bugs have been fixed
 - Unit tests are passing
 - Documentation has been updated
-- Memory Bank has been established
+- Memory Bank is being maintained
 - Release notes have been updated
 
-The npm publish process can proceed as planned through the CI/CD pipeline.
+The library is ready for use in production environments.

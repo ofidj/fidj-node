@@ -7,15 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.1.13] - 2023-11-15
+
 ### Added
 
-- needsRefresh() and isConnected()
+- needsRefresh() and isConnected() methods
+- Enhanced error handling for endpoints
+- Improved synchronization in sendOnEndpoint
 
 ### Changed
 
-- Linted and prettier
+- Code linting and formatting improvements
+- Updated dependencies to latest versions
+- Additional unit tests for improved code quality
 
-## [15.1.12] - 2025-05-25
+## [15.1.12] - 2023-05-25
 
 ### Changed
 
@@ -23,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code cleanup and minor improvements
 - Added memory bank resources
 
-## [15.1.10] - 2025-04-29
+## [15.1.10] - 2023-04-29
 
 ### Added
 
