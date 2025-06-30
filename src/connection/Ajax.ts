@@ -50,7 +50,9 @@ export class Ajax {
 
         try {
             data = JSON.parse(response.data);
-        } catch (e) {}
+        } catch (e) {
+            // Ignore JSON parsing errors, use the raw data instead
+        }
 
         return {status, data};
     }

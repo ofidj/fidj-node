@@ -81,7 +81,9 @@ export class FidjNodeService implements IService {
         let roles = [];
         try {
             roles = [].concat(payload.roles);
-        } catch (ignored) {}
+        } catch (ignored) {
+            // If payload.roles is not an array or doesn't exist, keep roles as an empty array
+        }
 
         return roles;
     }
@@ -108,7 +110,9 @@ export class FidjNodeService implements IService {
         await this.connection.init(
             this.sdk.version,
             fidjId,
-            !options || !options.hasOwnProperty('crypto') ? false : options.crypto
+            !options || !Object.prototype.hasOwnProperty.call(options, 'crypto')
+                ? false
+                : options.crypto
         );
 
         let bestUrls = [],
@@ -175,8 +179,6 @@ export class FidjNodeService implements IService {
     public async loginInDemoMode(
         options?: ModuleServiceLoginOptionsInterface
     ): Promise<any | ErrorInterface> {
-        const self = this;
-
         // generate one day tokens if not set
         if (!options || !options.accessToken) {
             const now = new Date();
@@ -201,17 +203,17 @@ export class FidjNodeService implements IService {
             };
         }
 
-        return new self.promise((resolve, reject) => {
-            self._removeAll()
+        return new this.promise((resolve, reject) => {
+            this._removeAll()
                 .then(() => {
-                    return self._createSession(self.connection.fidjId);
+                    return this._createSession(this.connection.fidjId);
                 })
                 .then(async () => {
-                    await self.connection.setConnectionOffline(options);
-                    resolve(self.connection.getUser());
+                    await this.connection.setConnectionOffline(options);
+                    resolve(this.connection.getUser());
                 })
                 .catch((err) => {
-                    self.logger.error('fidj.sdk.service.loginInDemoMode error: ', err);
+                    this.logger.error('fidj.sdk.service.loginInDemoMode error: ', err);
                     reject(err);
                 });
         });
@@ -277,23 +279,22 @@ export class FidjNodeService implements IService {
     }
 
     public async logout(force?: boolean): Promise<void | ErrorInterface> {
-        const self = this;
-        if (!self.connection.getClient() && !force) {
-            return self._removeAll().then(() => {
-                return this.session.create(self.connection.fidjId, true);
+        if (!this.connection.getClient() && !force) {
+            return this._removeAll().then(() => {
+                return this.session.create(this.connection.fidjId, true);
             });
         }
 
-        return self.connection
+        return this.connection
             .logout()
             .then(() => {
-                return self._removeAll();
+                return this._removeAll();
             })
             .catch(() => {
-                return self._removeAll();
+                return this._removeAll();
             })
             .then(() => {
-                return this.session.create(self.connection.fidjId, true);
+                return this.session.create(this.connection.fidjId, true);
             });
     }
 
@@ -362,22 +363,21 @@ export class FidjNodeService implements IService {
     }
 
     public async fidjPutInDb(data: any): Promise<string | ErrorInterface> {
-        const self = this;
-        self.logger.log('fidj.sdk.service.fidjPutInDb: ', data);
-        if (!self.sdk.useDB) {
-            self.logger.log(
+        this.logger.log('fidj.sdk.service.fidjPutInDb: ', data);
+        if (!this.sdk.useDB) {
+            this.logger.log(
                 'fidj.sdk.service.fidjPutInDb: you are not using DB - no put available.'
             );
             return Promise.resolve('NA');
         }
 
-        if (!self.connection.getClientId()) {
-            return self.promise.reject(
+        if (!this.connection.getClientId()) {
+            return this.promise.reject(
                 new FidjError(401, 'DB put impossible. Need a user logged in.')
             );
         }
-        if (!self.session.isReady()) {
-            return self.promise.reject(new FidjError(400, 'Need to be synchronised.'));
+        if (!this.session.isReady()) {
+            return this.promise.reject(new FidjError(400, 'Need to be synchronised.'));
         }
 
         let _id: string;
@@ -385,105 +385,100 @@ export class FidjNodeService implements IService {
             _id = data._id;
         }
         if (!_id) {
-            _id = self._generateObjectUniqueId(self.connection.fidjId);
+            _id = this._generateObjectUniqueId(this.connection.fidjId);
         }
         let crypto: SessionCryptoInterface;
-        if (self.connection.fidjCrypto) {
+        if (this.connection.fidjCrypto) {
             crypto = {
-                obj: self.connection,
+                obj: this.connection,
                 method: 'encrypt',
             };
         }
 
-        return self.session.put(
+        return this.session.put(
             data,
             _id,
-            self.connection.getClientId(),
-            self.sdk.org,
-            self.connection.fidjVersion,
+            this.connection.getClientId(),
+            this.sdk.org,
+            this.connection.fidjVersion,
             crypto
         );
     }
 
     public async fidjRemoveInDb(data_id: string): Promise<void | ErrorInterface> {
-        const self = this;
-        self.logger.log('fidj.sdk.service.fidjRemoveInDb ', data_id);
-        if (!self.sdk.useDB) {
-            self.logger.log(
+        this.logger.log('fidj.sdk.service.fidjRemoveInDb ', data_id);
+        if (!this.sdk.useDB) {
+            this.logger.log(
                 'fidj.sdk.service.fidjRemoveInDb: you are not using DB - no remove available.'
             );
             return Promise.resolve();
         }
 
-        if (!self.session.isReady()) {
-            return self.promise.reject(new FidjError(400, 'Need to be synchronised.'));
+        if (!this.session.isReady()) {
+            return this.promise.reject(new FidjError(400, 'Need to be synchronised.'));
         }
 
         if (!data_id || typeof data_id !== 'string') {
-            return self.promise.reject(
+            return this.promise.reject(
                 new FidjError(400, 'DB remove impossible. ' + 'Need the data._id.')
             );
         }
 
-        return self.session.remove(data_id);
+        return this.session.remove(data_id);
     }
 
     public async fidjFindInDb(data_id: string): Promise<any | ErrorInterface> {
-        const self = this;
-
-        if (!self.sdk.useDB) {
-            self.logger.log(
+        if (!this.sdk.useDB) {
+            this.logger.log(
                 'fidj.sdk.service.fidjFindInDb: you are not using DB - no find available.'
             );
             return Promise.resolve();
         }
 
-        if (!self.connection.getClientId()) {
-            return self.promise.reject(new FidjError(401, 'Find pb : need a user logged in.'));
+        if (!this.connection.getClientId()) {
+            return this.promise.reject(new FidjError(401, 'Find pb : need a user logged in.'));
         }
-        if (!self.session.isReady()) {
-            return self.promise.reject(new FidjError(400, ' Need to be synchronised.'));
+        if (!this.session.isReady()) {
+            return this.promise.reject(new FidjError(400, ' Need to be synchronised.'));
         }
 
         let crypto: SessionCryptoInterface;
-        if (self.connection.fidjCrypto) {
+        if (this.connection.fidjCrypto) {
             crypto = {
-                obj: self.connection,
+                obj: this.connection,
                 method: 'decrypt',
             };
         }
 
-        return self.session.get(data_id, crypto);
+        return this.session.get(data_id, crypto);
     }
 
     public async fidjFindAllInDb(): Promise<Array<any> | ErrorInterface> {
-        const self = this;
-
-        if (!self.sdk.useDB) {
-            self.logger.log(
+        if (!this.sdk.useDB) {
+            this.logger.log(
                 'fidj.sdk.service.fidjFindAllInDb: you are not using DB - no find available.'
             );
             return Promise.resolve([]);
         }
 
-        if (!self.connection.getClientId()) {
-            return self.promise.reject(new FidjError(401, 'Need a user logged in.'));
+        if (!this.connection.getClientId()) {
+            return this.promise.reject(new FidjError(401, 'Need a user logged in.'));
         }
-        if (!self.session.isReady()) {
-            return self.promise.reject(new FidjError(400, 'Need to be synchronised.'));
+        if (!this.session.isReady()) {
+            return this.promise.reject(new FidjError(400, 'Need to be synchronised.'));
         }
 
         let crypto: SessionCryptoInterface;
-        if (self.connection.fidjCrypto) {
+        if (this.connection.fidjCrypto) {
             crypto = {
-                obj: self.connection,
+                obj: this.connection,
                 method: 'decrypt',
             };
         }
 
-        return self.session.getAll(crypto).then((results) => {
-            self.connection.setCryptoSaltAsVerified();
-            return self.promise.resolve(results as Array<any>);
+        return this.session.getAll(crypto).then((results) => {
+            this.connection.setCryptoSaltAsVerified();
+            return this.promise.resolve(results as Array<any>);
         });
     }
 
