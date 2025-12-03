@@ -14,11 +14,11 @@ export interface EndpointFilterInterface {
     showBlocked?: boolean;
 }
 
-export interface EndpointCallInterface {
+export interface EndpointCallInterface<TData = any> {
     verb: string;
     key?: string;
     relativePath?: string;
-    data?: any;
+    data?: TData;
 
     // in case of key not found
     defaultKeyUrl?: string;

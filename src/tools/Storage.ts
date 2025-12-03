@@ -103,7 +103,9 @@ export class LocalStorage {
                     return value.json;
                 }
             }
-        } catch (e) {}
+        } catch (e) {
+            // If there's an error parsing the stored value, fall through to return the default value
+        }
         return !def ? null : def;
     }
 

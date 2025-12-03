@@ -32,21 +32,6 @@ Please read the [specifications](./specs) for detailed information about each mo
 - [tools](./specs/tools): Utility functions
 - [scenarios](./specs/01.scenario): Usage scenarios and examples
 
-### Memory Bank
-
-This project uses a Memory Bank for comprehensive documentation and context retention. The Memory Bank is located in the
-`.memory-bank` directory and contains the following files:
-
-- `memory-bank-rules.md`: Rules to follow and to consider in all contexts
-- `projectbrief.md`: Overview of the project, core requirements, and goals
-- `productContext.md`: Why the project exists, problems it solves, and how it works
-- `systemPatterns.md`: System architecture, key technical decisions, and design patterns
-- `techContext.md`: Technologies used, development setup, and technical constraints
-- `activeContext.md`: Current work focus, recent changes, and next steps
-- `progress.md`: What works, what's left to build, and known issues
-
-=> !! These files should always be considered as a context and kept up-to-date !!
-
 ## 🧪 Testing
 
 ```bash

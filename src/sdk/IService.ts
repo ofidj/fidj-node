@@ -30,5 +30,7 @@ export interface IService {
      * @throws ErrorInterface
      * @param input
      */
-    sendOnEndpoint(input: EndpointCallInterface): Promise<{status: number; data?: any}>;
+    sendOnEndpoint<TData = any, TResponse = any>(
+        input: EndpointCallInterface<TData>
+    ): Promise<{status: number; data?: TResponse}>;
 }

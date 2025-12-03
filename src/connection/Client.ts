@@ -1,7 +1,7 @@
 import {Ajax} from './Ajax';
 import * as tools from '../tools';
 import {LocalStorage} from '../tools';
-import {ErrorInterface, FidjError, LoggerInterface, SdkInterface} from '../sdk';
+import {ErrorInterface, FidjError, FidjNodeService, LoggerInterface, SdkInterface} from '../sdk';
 import {ClientTokens} from './ClientTokens';
 import {ClientUser} from './ClientUser';
 import {ClientToken} from './ClientToken';
@@ -72,6 +72,7 @@ export class Client {
             const status = await ajax.get({
                 url: this.URI + '/status',
                 headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+                timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
             });
             if (status.data?.urls?.length) {
                 return true;
@@ -107,6 +108,7 @@ export class Client {
                     url: urlLogin,
                     data: dataLogin,
                     headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+                    timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
                 })) as any
             ).data.user;
 
@@ -132,6 +134,7 @@ export class Client {
                     url: urlToken,
                     data: dataToken,
                     headers,
+                    timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
                 })
             ).data.token;
 
@@ -145,6 +148,7 @@ export class Client {
                         Accept: 'application/json',
                         Authorization: 'Bearer ' + createdAccessToken.data,
                     },
+                    timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
                 })) as any
             ).data.token;
 
@@ -158,6 +162,7 @@ export class Client {
                         Accept: 'application/json',
                         Authorization: 'Bearer ' + createdAccessToken.data,
                     },
+                    timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
                 })) as any
             ).data.token;
 
@@ -200,6 +205,7 @@ export class Client {
                     Accept: 'application/json',
                     Authorization: 'Bearer ' + refreshToken,
                 },
+                timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
             })
         ).data.token;
 
@@ -213,6 +219,7 @@ export class Client {
                     Accept: 'application/json',
                     Authorization: 'Bearer ' + createdAccessToken.data,
                 },
+                timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
             })) as any
         ).data.token;
 
@@ -248,6 +255,7 @@ export class Client {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
                     Authorization: 'Bearer ' + refreshToken,
+                    timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
                 },
             })
         ).data;

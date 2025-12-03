@@ -3,6 +3,7 @@ import {
     EndpointInterface,
     ErrorInterface,
     FidjError,
+    FidjNodeService,
     LoggerInterface,
     ModuleServiceLoginOptionsInterface,
     SdkInterface,
@@ -220,7 +221,9 @@ export class Connection {
             const payload = this.refreshToken.split('.')[1];
             const decoded = JSON.parse(Base64.decode(payload));
             exp = new Date().getTime() / 1000 >= decoded.exp;
-        } catch (e) {}
+        } catch (e) {
+            // If there's an error parsing the token, keep exp as true (not logged in)
+        }
         return !exp;
     }
 
@@ -280,7 +283,9 @@ export class Connection {
             if (payload) {
                 return Base64.decode(payload);
             }
-        } catch (e) {}
+        } catch (e) {
+            // If there's an error parsing the token, return the default value
+        }
         return def ? def : null;
     }
 
@@ -294,7 +299,9 @@ export class Connection {
             if (payload) {
                 return Base64.decode(payload);
             }
-        } catch (e) {}
+        } catch (e) {
+            // If there's an error parsing the previous token, return the default value
+        }
         return def ? def : null;
     }
 
@@ -615,6 +622,7 @@ export class Connection {
                 await new Ajax().get({
                     url: endpointUrl + '/status?isOk=' + this._sdk.version,
                     headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+                    timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
                 })
             ).data;
 
@@ -655,6 +663,7 @@ export class Connection {
             await new Ajax().get({
                 url: dbEndpoint,
                 headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+                timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
             });
 
             this.states[dbEndpoint] = {state: true, time: currentTime, lastTimeWasOk: currentTime};

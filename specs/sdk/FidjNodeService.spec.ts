@@ -422,7 +422,7 @@ describe('FidjNodeService', () => {
 
         // Make fidjPutInDb throw an error
         spy.on(srv, 'fidjPutInDb', (returns) => {
-            throw { code: 400, reason: 'Need to be synchronised.' };
+            throw {code: 400, reason: 'Need to be synchronised.'};
         });
 
         const mock = {
@@ -539,8 +539,7 @@ describe('FidjNodeService', () => {
         spy.on((srv as any).session, 'put', (returns) => Promise.resolve('ok'));
         spy.on(srv as any, '_generateObjectUniqueId', (returns) => 'uid');
         (srv as any).connection.fidjCrypto = true;
-        let crypto: SessionCryptoInterface;
-        crypto = {
+        const crypto: SessionCryptoInterface = {
             obj: (srv as any).connection,
             method: 'encrypt',
         };
@@ -656,14 +655,13 @@ describe('FidjNodeService', () => {
     });
 
     it('should sendOnEndpoint KO : 400 without valid endpoint', async () => {
-        let accessPayload;
         const srv = new FidjNodeService(_log, _q);
 
         // Mock the sync method to not throw an error
         spy.on(srv, 'sync', (returns) => Promise.resolve());
 
         // no endpoint -> catch error
-        accessPayload = {endpoints: []};
+        const accessPayload = {endpoints: []};
         const getAccessPayload1 = spy.on((srv as any).connection, 'getAccessPayload', (returns) =>
             Promise.resolve(JSON.stringify(accessPayload))
         );
@@ -678,7 +676,7 @@ describe('FidjNodeService', () => {
     });
 
     it('should sendOnEndpoint OK : without valid endpoint but defaultKeyUrl', async () => {
-        const MOCKED_RESPONSE = { status: 200, data: 'mocked response' };
+        const MOCKED_RESPONSE = {status: 200, data: 'mocked response'};
 
         let accessPayload;
         const srv = new FidjNodeService(_log, _q);
@@ -720,16 +718,15 @@ describe('FidjNodeService', () => {
     });
 
     it('should sendOnEndpoint OK', async () => {
-        const MOCKED_RESPONSE = { status: 200, data: 'mocked response' };
+        const MOCKED_RESPONSE = {status: 200, data: 'mocked response'};
 
-        let accessPayload;
         const srv = new FidjNodeService(_log, _q);
 
         // Mock the sync method to not throw an error
         spy.on(srv, 'sync', (returns) => Promise.resolve());
 
         // Mock getAccessPayload to return endpoints with the one we need
-        accessPayload = {
+        const accessPayload = {
             endpoints: [
                 {key: 'my endpoint1', url: 'http://test1.com'},
                 {key: 'my endpoint2', url: 'http://test2.com', blocked: true},
@@ -787,12 +784,12 @@ describe('FidjNodeService', () => {
     });
 
     it('should fidjForgotPasswordRequest', async () => {
-        const MOCKED_RESPONSE = { status: 204 };
+        const MOCKED_RESPONSE = {status: 204};
 
         // Mock getApiEndpoints to return a specific endpoint
         const srv = new FidjNodeService(_log, _q);
         spy.on((srv as any).connection, 'getApiEndpoints', (returns) =>
-            Promise.resolve([{ url: 'http://localhost:3201/v3' }])
+            Promise.resolve([{url: 'http://localhost:3201/v3'}])
         );
 
         // Mock axios.post to return the expected response
