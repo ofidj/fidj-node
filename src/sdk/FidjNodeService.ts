@@ -26,7 +26,7 @@ import {
     FidjApiUsersMeResponse,
     FidjApiUsersMeDetailsResponse,
     FidjApiUsersMeUpdateRequest,
-} from 'fidj-api-contracts';
+} from '../api';
 
 // TODO const PouchDB = window['PouchDB'] || require('pouchdb').default;
 

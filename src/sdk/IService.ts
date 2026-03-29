@@ -11,7 +11,7 @@ import {
     FidjApiUsersMeResponse,
     FidjApiUsersMeDetailsResponse,
     FidjApiUsersMeUpdateRequest,
-} from 'fidj-api-contracts';
+} from '../api';
 
 export interface IService {
     init(fidjId?: string, options?: ModuleServiceInitOptionsInterface): Promise<void>;
