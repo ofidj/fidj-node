@@ -68,7 +68,52 @@ describe('FidjNodeService', () => {
             });
     });
 
-    it('should init KO : without required fidjId', function (done) {
+    it('should init OK : zero-config defaults to sandbox', function (done) {
+        const srv = new FidjNodeService(_log, _q);
+        spy.on((srv as any).connection, 'verifyConnectionStates', (returns) => _q.resolve());
+        spy.on((srv as any).connection, 'getApiEndpoints', (returns) =>
+            Promise.resolve(['http://sandbox-endpoint/mock'])
+        );
+        spy.on((srv as any).connection, 'setClient', (returns) => {});
+
+        srv.init()
+            .then(() => {
+                // should use sandbox mode (prod=false)
+                expect((srv as any).sdk.prod).eq(false);
+                // should use default sandbox fidjId
+                expect((srv as any).connection.fidjId).to.be.a('string');
+                expect((srv as any).connection.fidjId.length).to.be.greaterThan(0);
+                expect((srv as any).connection.verifyConnectionStates).to.have.been.called.exactly(
+                    1
+                );
+                expect((srv as any).connection.setClient).to.have.been.called.exactly(1);
+                done();
+            })
+            .catch(function (err) {
+                assert.fail(err);
+            });
+    });
+
+    it('should init OK : zero-config with explicit fidjId still uses prod by default', function (done) {
+        const srv = new FidjNodeService(_log, _q);
+        spy.on((srv as any).connection, 'verifyConnectionStates', (returns) => _q.resolve());
+        spy.on((srv as any).connection, 'getApiEndpoints', (returns) =>
+            Promise.resolve(['http://endpoint/mock'])
+        );
+        spy.on((srv as any).connection, 'setClient', (returns) => {});
+
+        srv.init('myExplicitAppId')
+            .then(() => {
+                // existing behavior preserved: prod=true when fidjId given without options
+                expect((srv as any).sdk.prod).eq(true);
+                done();
+            })
+            .catch(function (err) {
+                assert.fail(err);
+            });
+    });
+
+    it('should init KO : explicit null fidjId without options still fails', function (done) {
         const srv = new FidjNodeService(_log, _q);
         srv.init(null, {prod: true, logLevel: LoggerLevelEnum.NONE})
             .then(() => {

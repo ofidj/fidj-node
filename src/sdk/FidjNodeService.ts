@@ -24,6 +24,7 @@ import {bpInfo} from '../bpInfo';
 
 export class FidjNodeService implements IService {
     public static DEFAULT_TIMEOUT_MS = 60000;
+    public static SANDBOX_FIDJ_ID = 'fidj-sandbox-0123fe7ed0000001';
 
     private static _srvDataUniqId = 0;
     private sdk: SdkInterface;
@@ -94,7 +95,7 @@ export class FidjNodeService implements IService {
         return payload?.aud;
     }
 
-    public async init(fidjId: string, options?: ModuleServiceInitOptionsInterface) {
+    public async init(fidjId?: string, options?: ModuleServiceInitOptionsInterface) {
         if (options?.logLevel) {
             this.logger.setLevel(options.logLevel);
         } else {
@@ -102,13 +103,22 @@ export class FidjNodeService implements IService {
         }
 
         this.logger.log('fidj.sdk.service.init : ', options);
+
+        // Zero-config: no fidjId and no options → sandbox auto-detect
+        const isZeroConfig = !fidjId && !options;
+        if (isZeroConfig) {
+            fidjId = FidjNodeService.SANDBOX_FIDJ_ID;
+            options = {prod: false};
+            this.logger.log('fidj.sdk.service.init : zero-config mode, using sandbox');
+        }
+
         if (!fidjId) {
             this.logger.error('fidj.sdk.service.init : bad init');
             throw new FidjError(400, 'Need a fidjId');
         }
 
-        this.sdk.prod = !options ? true : options.prod;
-        this.sdk.useDB = !options ? false : options.useDB;
+        this.sdk.prod = !options ? true : (options.prod ?? true);
+        this.sdk.useDB = !options ? false : (options.useDB ?? false);
         await this.connection.init(
             this.sdk.version,
             fidjId,

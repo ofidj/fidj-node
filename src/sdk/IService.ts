@@ -11,7 +11,7 @@ export interface IService {
      * @param fidjId
      * @param options
      */
-    init(fidjId: string, options?: ModuleServiceInitOptionsInterface): Promise<void>;
+    init(fidjId?: string, options?: ModuleServiceInitOptionsInterface): Promise<void>;
 
     /**
      * @throws ErrorInterface

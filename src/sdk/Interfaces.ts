@@ -33,7 +33,7 @@ export interface EndpointCallInterface<TData = any> {
  * logLevel : NONE by default
  */
 export interface ModuleServiceInitOptionsInterface {
-    prod: boolean;
+    prod?: boolean;
     useDB?: boolean;
     crypto?: boolean;
     logLevel?: LoggerLevelEnum;
