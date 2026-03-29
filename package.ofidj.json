@@ -1,6 +1,8 @@
 {
-  "local.dependencies": {
-  },
-  "remote.dependencies": {
-  }
+    "local.dependencies": {
+        "fidj-api-contracts": "file:../fidj-api-contracts/dist"
+    },
+    "remote.dependencies": {
+        "fidj-api-contracts": "git+https://github.com/ofidj/fidj-api-contracts.git#v0.1.0"
+    }
 }

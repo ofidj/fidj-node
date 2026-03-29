@@ -19,6 +19,14 @@ import urlJoin from 'proper-url-join';
 import {FidjError} from './FidjError';
 import {IService} from './IService';
 import {bpInfo} from '../bpInfo';
+import {
+    FidjApiConsentsResponse,
+    FidjApiConsentsUpdateRequest,
+    FidjApiConsentsHistoryResponse,
+    FidjApiUsersMeResponse,
+    FidjApiUsersMeDetailsResponse,
+    FidjApiUsersMeUpdateRequest,
+} from 'fidj-api-contracts';
 
 // TODO const PouchDB = window['PouchDB'] || require('pouchdb').default;
 
@@ -587,6 +595,63 @@ export class FidjNodeService implements IService {
                 });
         }
         return answer;
+    }
+
+    // Typed API convenience methods (using fidj-api-contracts)
+
+    public async getMe(): Promise<{status: number; data?: FidjApiUsersMeResponse}> {
+        return this.sendOnEndpoint<void, FidjApiUsersMeResponse>({
+            verb: 'GET',
+            key: 'me',
+        });
+    }
+
+    public async getMeDetails(): Promise<{status: number; data?: FidjApiUsersMeDetailsResponse}> {
+        return this.sendOnEndpoint<void, FidjApiUsersMeDetailsResponse>({
+            verb: 'GET',
+            key: 'me',
+            relativePath: 'details',
+        });
+    }
+
+    public async updateMe(
+        data: FidjApiUsersMeUpdateRequest
+    ): Promise<{status: number; data?: FidjApiUsersMeResponse}> {
+        return this.sendOnEndpoint<FidjApiUsersMeUpdateRequest, FidjApiUsersMeResponse>({
+            verb: 'PUT',
+            key: 'me',
+            data,
+        });
+    }
+
+    public async getConsents(): Promise<{status: number; data?: FidjApiConsentsResponse}> {
+        return this.sendOnEndpoint<void, FidjApiConsentsResponse>({
+            verb: 'GET',
+            key: 'me',
+            relativePath: 'consents',
+        });
+    }
+
+    public async putConsents(
+        data: FidjApiConsentsUpdateRequest
+    ): Promise<{status: number; data?: FidjApiConsentsResponse}> {
+        return this.sendOnEndpoint<FidjApiConsentsUpdateRequest, FidjApiConsentsResponse>({
+            verb: 'PUT',
+            key: 'me',
+            relativePath: 'consents',
+            data,
+        });
+    }
+
+    public async getConsentsHistory(): Promise<{
+        status: number;
+        data?: FidjApiConsentsHistoryResponse;
+    }> {
+        return this.sendOnEndpoint<void, FidjApiConsentsHistoryResponse>({
+            verb: 'GET',
+            key: 'me',
+            relativePath: 'consents/history',
+        });
     }
 
     public async fidjForgotPasswordRequest(email: string) {
