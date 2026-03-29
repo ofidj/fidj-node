@@ -7,7 +7,9 @@
 Node.js library that provides a set of tools for FIDJ client authentication, connection management, session
 handling, and various utility functions. It's designed to simplify interactions with remote services or APIs.
 
-## 🚀 Installation
+## 🚀 Quick Start
+
+See the full [Quickstart Guide](./QUICKSTART.md) — from `npm install` to first login in under 15 minutes.
 
 ```bash
 npm install fidj-node
