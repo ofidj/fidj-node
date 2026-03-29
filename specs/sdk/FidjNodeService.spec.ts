@@ -852,4 +852,119 @@ describe('FidjNodeService', () => {
             spy.restore(axios, 'post');
         }
     });
+
+    it('should initAndLogin OK : zero-config (no fidjId)', async () => {
+        const srv = new FidjNodeService(_log, _q);
+
+        // Mock init chain
+        spy.on((srv as any).connection, 'verifyConnectionStates', (returns) => _q.resolve());
+        spy.on((srv as any).connection, 'getApiEndpoints', (returns) =>
+            Promise.resolve(['http://endpoint/mock'])
+        );
+        spy.on((srv as any).connection, 'setClient', (returns) => {});
+
+        // Mock login chain
+        spy.on((srv as any).connection, 'isReady', (returns) => true);
+        spy.on(srv as any, '_removeAll', (returns) => Promise.resolve());
+        spy.on(srv as any, '_createSession', (returns) => Promise.resolve());
+        spy.on(srv as any, '_loginInternal', (returns) => Promise.resolve({}));
+        spy.on((srv as any).connection, 'setConnection', (returns) => Promise.resolve(null));
+        spy.on(
+            (srv as any).connection,
+            'getUser',
+            (returns) => new ClientUser('id', 'initAndLoginUser', [])
+        );
+
+        // Call initAndLogin without fidjId → zero-config sandbox
+        const user = await srv.initAndLogin(_login, _password);
+
+        expect(user.username).eq('initAndLoginUser');
+        // init was called (verifyConnectionStates proves it)
+        expect((srv as any).connection.verifyConnectionStates).to.have.been.called.exactly(1);
+        // login was called
+        expect((srv as any)._loginInternal).to.have.been.called.exactly(1);
+        expect((srv as any).connection.getUser).to.have.been.called.exactly(1);
+    });
+
+    it('should initAndLogin OK : with explicit fidjId', async () => {
+        const srv = new FidjNodeService(_log, _q);
+
+        spy.on((srv as any).connection, 'verifyConnectionStates', (returns) => _q.resolve());
+        spy.on((srv as any).connection, 'getApiEndpoints', (returns) =>
+            Promise.resolve(['http://endpoint/mock'])
+        );
+        spy.on((srv as any).connection, 'setClient', (returns) => {});
+        spy.on((srv as any).connection, 'isReady', (returns) => true);
+        spy.on(srv as any, '_removeAll', (returns) => Promise.resolve());
+        spy.on(srv as any, '_createSession', (returns) => Promise.resolve());
+        spy.on(srv as any, '_loginInternal', (returns) => Promise.resolve({}));
+        spy.on((srv as any).connection, 'setConnection', (returns) => Promise.resolve(null));
+        spy.on(
+            (srv as any).connection,
+            'getUser',
+            (returns) => new ClientUser('id', 'prodUser', ['Owner'])
+        );
+
+        // Call with explicit fidjId + prod options
+        const user = await srv.initAndLogin(_login, _password, 'my-prod-app', {prod: true});
+
+        expect(user.username).eq('prodUser');
+        expect(user.roles).to.include('Owner');
+        expect((srv as any).connection.verifyConnectionStates).to.have.been.called.exactly(1);
+        expect((srv as any)._loginInternal).to.have.been.called.exactly(1);
+    });
+
+    it('should initAndLogin KO : propagates init error', async () => {
+        const srv = new FidjNodeService(_log, _q);
+
+        // init will fail (no endpoints)
+        spy.on((srv as any).connection, 'verifyConnectionStates', (returns) => _q.resolve());
+        spy.on((srv as any).connection, 'getApiEndpoints', (returns) => Promise.resolve([]));
+
+        try {
+            await srv.initAndLogin(_login, _password);
+            assert.fail('should have thrown');
+        } catch (err) {
+            expect(err.code).eq(404);
+        }
+    });
+
+    it('should initDemo OK : zero-config sandbox', async () => {
+        const srv = new FidjNodeService(_log, _q);
+        const demoUser = new ClientUser('demo-id', 'demoUser', []);
+
+        // Mock init chain
+        spy.on((srv as any).connection, 'verifyConnectionStates', (returns) => _q.resolve());
+        spy.on((srv as any).connection, 'getApiEndpoints', (returns) =>
+            Promise.resolve(['http://endpoint/mock'])
+        );
+        spy.on((srv as any).connection, 'setClient', (returns) => {});
+
+        // Spy on loginInDemoMode directly to avoid Base64 spy leakage
+        spy.on(srv, 'loginInDemoMode', (returns) => Promise.resolve(demoUser));
+
+        const user = await srv.initDemo();
+
+        expect(user.username).eq('demoUser');
+        expect((srv as any).connection.verifyConnectionStates).to.have.been.called.exactly(1);
+        expect(srv.loginInDemoMode).to.have.been.called.exactly(1);
+    });
+
+    it('should initDemo OK : with explicit fidjId', async () => {
+        const srv = new FidjNodeService(_log, _q);
+        const demoUser = new ClientUser('demo-id', 'demoUser', []);
+
+        spy.on((srv as any).connection, 'verifyConnectionStates', (returns) => _q.resolve());
+        spy.on((srv as any).connection, 'getApiEndpoints', (returns) =>
+            Promise.resolve(['http://endpoint/mock'])
+        );
+        spy.on((srv as any).connection, 'setClient', (returns) => {});
+        spy.on(srv, 'loginInDemoMode', (returns) => Promise.resolve(demoUser));
+
+        const user = await srv.initDemo('my-test-app', {prod: false});
+
+        expect(user.username).eq('demoUser');
+        expect((srv as any).connection.verifyConnectionStates).to.have.been.called.exactly(1);
+        expect(srv.loginInDemoMode).to.have.been.called.exactly(1);
+    });
 });

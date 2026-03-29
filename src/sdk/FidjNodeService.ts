@@ -231,6 +231,26 @@ export class FidjNodeService implements IService {
         });
     }
 
+    // Convenience: init + login in one call
+    // Usage: await srv.initAndLogin('user@test.com', 'pwd')  → zero-config sandbox
+    // Usage: await srv.initAndLogin('user@test.com', 'pwd', 'my-app')  → prod
+    public async initAndLogin(
+        login: string,
+        password: string,
+        fidjId?: string,
+        options?: ModuleServiceInitOptionsInterface
+    ) {
+        await this.init(fidjId, options);
+        return this.login(login, password);
+    }
+
+    // Convenience: init + loginInDemoMode in one call
+    // Usage: await srv.initDemo()  → sandbox with mock tokens, zero setup
+    public async initDemo(fidjId?: string, options?: ModuleServiceInitOptionsInterface) {
+        await this.init(fidjId, options);
+        return this.loginInDemoMode();
+    }
+
     public isLoggedIn(): boolean {
         return this.connection.isLogin();
     }

@@ -26,6 +26,17 @@ export interface IService {
      */
     loginInDemoMode(options?: ModuleServiceLoginOptionsInterface): Promise<ClientUser>;
 
+    // Convenience: init + login in one call (reduces cognitive load)
+    initAndLogin(
+        login: string,
+        password: string,
+        fidjId?: string,
+        options?: ModuleServiceInitOptionsInterface
+    ): Promise<ClientUser>;
+
+    // Convenience: init in demo/sandbox mode with mock tokens
+    initDemo(fidjId?: string, options?: ModuleServiceInitOptionsInterface): Promise<ClientUser>;
+
     /**
      * @throws ErrorInterface
      * @param input
