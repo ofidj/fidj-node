@@ -140,12 +140,13 @@ describe('FidjNodeService', () => {
                     1
                 );
                 expect(err.code).eq(500);
-                expect(err.reason).eq('no connection');
+                expect(err.reason).to.contain('Could not verify API endpoints');
+                expect(err.reason).to.contain('no connection');
                 done();
             });
     });
 
-    it('should init KO : no endpoint at all', function (done) {
+    it('should init KO : no endpoint at all with descriptive error', function (done) {
         const srv = new FidjNodeService(_log, _q);
         spy.on((srv as any).connection, 'verifyConnectionStates', (returns) => _q.resolve());
         spy.on((srv as any).connection, 'getApiEndpoints', (returns) => Promise.resolve([]));
@@ -159,14 +160,45 @@ describe('FidjNodeService', () => {
                     1
                 );
                 expect((srv as any).connection.getApiEndpoints).to.have.been.called.exactly(2);
-                expect(
-                    err.equals(
-                        new FidjError(
-                            404,
-                            'Need one connection - or too old SDK version (check update)'
-                        )
-                    )
-                ).eq(true);
+                expect(err.code).eq(404);
+                expect(err.reason).to.contain('No reachable API endpoint');
+                expect(err.reason).to.contain('api.fidj.ovh');
+                done();
+            });
+    });
+
+    it('should init KO : no endpoint in sandbox mode shows sandbox URLs', function (done) {
+        const srv = new FidjNodeService(_log, _q);
+        spy.on((srv as any).connection, 'verifyConnectionStates', (returns) => _q.resolve());
+        spy.on((srv as any).connection, 'getApiEndpoints', (returns) => Promise.resolve([]));
+
+        srv.init('testAppNoEndpointSandbox', {prod: false})
+            .then(() => {
+                assert.fail('should fail');
+            })
+            .catch(function (err) {
+                expect(err.code).eq(404);
+                expect(err.reason).to.contain('No reachable API endpoint');
+                expect(err.reason).to.contain('sandbox.fidj.ovh');
+                done();
+            });
+    });
+
+    it('should init KO : network error includes cause in message', function (done) {
+        const srv = new FidjNodeService(_log, _q);
+        const networkErr = new Error('ECONNREFUSED 127.0.0.1:3201');
+        spy.on((srv as any).connection, 'verifyConnectionStates', (returns) =>
+            _q.reject(networkErr)
+        );
+
+        srv.init('testAppNetworkFail', {prod: false, logLevel: LoggerLevelEnum.NONE})
+            .then(() => {
+                assert.fail('should fail');
+            })
+            .catch(function (err) {
+                expect(err.code).eq(500);
+                expect(err.reason).to.contain('ECONNREFUSED');
+                expect(err.reason).to.contain('Could not verify API endpoints');
                 done();
             });
     });

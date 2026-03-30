@@ -7,13 +7,30 @@
 Node.js library that provides a set of tools for FIDJ client authentication, connection management, session
 handling, and various utility functions. It's designed to simplify interactions with remote services or APIs.
 
-## 🚀 Quick Start
-
-See the full [Quickstart Guide](./QUICKSTART.md) — from `npm install` to first login in under 15 minutes.
+## 🚀 Quick Start (5 minutes)
 
 ```bash
 npm install fidj-node
 ```
+
+```typescript
+import {FidjNodeService} from 'fidj-node';
+
+const fidj = new FidjNodeService();
+
+// Zero-config: connects to sandbox automatically
+await fidj.init();
+
+// Or with your app ID for production
+// await fidj.init('your-fidj-app-id', {prod: true});
+
+await fidj.login('user@example.com', 'password');
+const token = await fidj.fidjGetIdToken();
+```
+
+**Where to find your fidjId?** Log in to [fidj.ovh](https://fidj.ovh), go to your app settings, and copy the App ID.
+
+See the full [Quickstart Guide](./QUICKSTART.md) for more examples (demo mode, browser usage, API calls, troubleshooting).
 
 ## 🧩 Modules
 

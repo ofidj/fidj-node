@@ -135,11 +135,20 @@ export class FidjNodeService implements IService {
             bestOldUrls = await this.connection.getApiEndpoints({filter: 'theBestOldOne'});
         } catch (err) {
             this.logger.error('fidj.sdk.service.init: ', err);
-            throw new FidjError(500, err.toString());
+            const cause = err instanceof Error ? err.message : err.toString();
+            throw new FidjError(500, 'Could not verify API endpoints: ' + cause);
         }
 
         if (bestUrls.length === 0 && bestOldUrls.length === 0) {
-            throw new FidjError(404, 'Need one connection - or too old SDK version (check update)');
+            const envHint = this.sdk.prod
+                ? 'https://api.fidj.ovh/v3'
+                : 'https://api.sandbox.fidj.ovh/v3';
+            throw new FidjError(
+                404,
+                'No reachable API endpoint. Tried: ' +
+                    envHint +
+                    '. Check your network, fidjId, and prod/sandbox setting.'
+            );
         }
 
         const theBestFirstUrl = bestUrls.length ? bestUrls[0] : bestOldUrls[0];
