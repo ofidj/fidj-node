@@ -1,8 +1,4 @@
 {
-    "local.dependencies": {
-        "fidj-api-contracts": "file:../fidj-api-contracts/dist"
-    },
-    "remote.dependencies": {
-        "fidj-api-contracts": "https://x-token-auth:ATCTT3xFfGN0jFCBtbnJ-U6-K6fK8kakNe3vNYMmDbaopAYgOTXvCV7N6QiD30ir8f615wievpAwpc0go5L6vjN4GycJLEk6GiADCz37dYZBK2f4GT07S_pwYnH52Xy4iI1JOWkhJ2QkDIGeLrfKhw97o6D-bbsuWwA7TRCbWH5NBRYyioGKahc=02E4A0CA@bitbucket.org/raain/fidj-api-contracts.git#package-0.1.0"
-    }
+    "local.dependencies": {},
+    "remote.dependencies": {}
 }
