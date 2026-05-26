@@ -4,29 +4,23 @@ import {
     ModuleServiceLoginOptionsInterface,
 } from './Interfaces';
 import {ClientUser} from '../connection';
+import {
+    FidjApiConsentsResponse,
+    FidjApiConsentsUpdateRequest,
+    FidjApiConsentsHistoryResponse,
+    FidjApiUsersMeResponse,
+    FidjApiUsersMeDetailsResponse,
+    FidjApiUsersMeUpdateRequest,
+} from '../api';
 
 export interface IService {
-    /**
-     * @throws ErrorInterface
-     * @param fidjId
-     * @param options
-     */
     init(fidjId?: string, options?: ModuleServiceInitOptionsInterface): Promise<void>;
 
-    /**
-     * @throws ErrorInterface
-     * @param login
-     * @param password
-     */
     login(login: string, password: string): Promise<ClientUser>;
 
-    /**
-     * @throws ErrorInterface
-     * @param options
-     */
     loginInDemoMode(options?: ModuleServiceLoginOptionsInterface): Promise<ClientUser>;
 
-    // Convenience: init + login in one call (reduces cognitive load)
+    // Convenience: init + login in one call
     initAndLogin(
         login: string,
         password: string,
@@ -34,14 +28,22 @@ export interface IService {
         options?: ModuleServiceInitOptionsInterface
     ): Promise<ClientUser>;
 
-    // Convenience: init in demo/sandbox mode with mock tokens
+    // Convenience: init in demo/sandbox mode
     initDemo(fidjId?: string, options?: ModuleServiceInitOptionsInterface): Promise<ClientUser>;
 
-    /**
-     * @throws ErrorInterface
-     * @param input
-     */
     sendOnEndpoint<TData = any, TResponse = any>(
         input: EndpointCallInterface<TData>
     ): Promise<{status: number; data?: TResponse}>;
+
+    // Typed API convenience methods
+    getMe(): Promise<{status: number; data?: FidjApiUsersMeResponse}>;
+    getMeDetails(): Promise<{status: number; data?: FidjApiUsersMeDetailsResponse}>;
+    updateMe(
+        data: FidjApiUsersMeUpdateRequest
+    ): Promise<{status: number; data?: FidjApiUsersMeResponse}>;
+    getConsents(): Promise<{status: number; data?: FidjApiConsentsResponse}>;
+    putConsents(
+        data: FidjApiConsentsUpdateRequest
+    ): Promise<{status: number; data?: FidjApiConsentsResponse}>;
+    getConsentsHistory(): Promise<{status: number; data?: FidjApiConsentsHistoryResponse}>;
 }

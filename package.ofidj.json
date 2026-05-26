@@ -1,6 +1,4 @@
 {
-  "local.dependencies": {
-  },
-  "remote.dependencies": {
-  }
+    "local.dependencies": {},
+    "remote.dependencies": {}
 }

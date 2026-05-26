@@ -6,6 +6,10 @@ import {
     ClientUser,
     ConnectionFindOptionsInterface,
     EndpointFilterInterface,
+    FidjApiConsentsResponse,
+    FidjApiConsentsUpdateRequest,
+    FidjApiUsersMeDetailsResponse,
+    FidjApiUsersMeResponse,
     FidjError,
     FidjNodeService,
     LoggerLevelEnum,
@@ -998,5 +1002,148 @@ describe('FidjNodeService', () => {
         expect(user.username).eq('demoUser');
         expect((srv as any).connection.verifyConnectionStates).to.have.been.called.exactly(1);
         expect(srv.loginInDemoMode).to.have.been.called.exactly(1);
+    });
+
+    // Typed convenience methods (fidj-api-contracts integration)
+    describe('Typed API methods', () => {
+        let srv: FidjNodeService;
+
+        beforeEach(() => {
+            srv = new FidjNodeService(_log, _q);
+        });
+
+        it('should export contract types from fidj-api-contracts', () => {
+            // Verify the types are importable (compile-time check + runtime existence)
+            const mockConsents: FidjApiConsentsResponse = {
+                terms: true,
+                analytics: false,
+                communications: false,
+                optionalData: false,
+            };
+            expect(mockConsents.terms).to.equal(true);
+
+            const mockMe: FidjApiUsersMeResponse = {
+                user: {id: '123', username: 'test@fidj.ovh'},
+            };
+            expect(mockMe.user.username).to.equal('test@fidj.ovh');
+        });
+
+        it('should getMe() call sendOnEndpoint with correct params', async () => {
+            const mockResponse = {status: 200, data: {user: {id: '1', username: 'u'}}};
+            spy.on(srv, 'sendOnEndpoint', () => Promise.resolve(mockResponse));
+
+            const result = await srv.getMe();
+
+            expect((srv.sendOnEndpoint as any).__spy.calls[0][0]).to.deep.equal({
+                verb: 'GET',
+                key: 'me',
+            });
+            expect(result.status).to.equal(200);
+            expect(result.data.user.username).to.equal('u');
+        });
+
+        it('should getMeDetails() call sendOnEndpoint with relativePath details', async () => {
+            const mockData: FidjApiUsersMeDetailsResponse = {
+                user: {
+                    id: '1',
+                    poc: {email: 'a@b.com'},
+                    username: 'a@b.com',
+                    name: 'Test',
+                    appsOwned: [],
+                    appsSubscribed: ['app1'],
+                },
+            };
+            spy.on(srv, 'sendOnEndpoint', () => Promise.resolve({status: 200, data: mockData}));
+
+            const result = await srv.getMeDetails();
+
+            expect((srv.sendOnEndpoint as any).__spy.calls[0][0]).to.deep.equal({
+                verb: 'GET',
+                key: 'me',
+                relativePath: 'details',
+            });
+            expect(result.data.user.name).to.equal('Test');
+            expect(result.data.user.appsSubscribed).to.deep.equal(['app1']);
+        });
+
+        it('should updateMe() send PUT with typed data', async () => {
+            spy.on(srv, 'sendOnEndpoint', () =>
+                Promise.resolve({status: 200, data: {user: {id: '1', username: 'u'}}})
+            );
+
+            await srv.updateMe({name: 'New Name', password: 'secret'});
+
+            const call = (srv.sendOnEndpoint as any).__spy.calls[0][0];
+            expect(call.verb).to.equal('PUT');
+            expect(call.key).to.equal('me');
+            expect(call.data.name).to.equal('New Name');
+            expect(call.data.password).to.equal('secret');
+        });
+
+        it('should getConsents() call sendOnEndpoint with relativePath consents', async () => {
+            const mockConsents: FidjApiConsentsResponse = {
+                terms: true,
+                termsVersion: '1.0.0',
+                analytics: false,
+                communications: false,
+                optionalData: false,
+            };
+            spy.on(srv, 'sendOnEndpoint', () => Promise.resolve({status: 200, data: mockConsents}));
+
+            const result = await srv.getConsents();
+
+            expect((srv.sendOnEndpoint as any).__spy.calls[0][0]).to.deep.equal({
+                verb: 'GET',
+                key: 'me',
+                relativePath: 'consents',
+            });
+            expect(result.data.terms).to.equal(true);
+            expect(result.data.termsVersion).to.equal('1.0.0');
+        });
+
+        it('should putConsents() send PUT with typed consent data', async () => {
+            spy.on(srv, 'sendOnEndpoint', () =>
+                Promise.resolve({
+                    status: 200,
+                    data: {
+                        terms: true,
+                        analytics: true,
+                        communications: false,
+                        optionalData: false,
+                    },
+                })
+            );
+
+            const update: FidjApiConsentsUpdateRequest = {
+                terms: true,
+                analytics: true,
+                cguVersion: '1.0.0',
+                source: 'signup',
+            };
+            const result = await srv.putConsents(update);
+
+            const call = (srv.sendOnEndpoint as any).__spy.calls[0][0];
+            expect(call.verb).to.equal('PUT');
+            expect(call.key).to.equal('me');
+            expect(call.relativePath).to.equal('consents');
+            expect(call.data.terms).to.equal(true);
+            expect(call.data.cguVersion).to.equal('1.0.0');
+            expect(call.data.source).to.equal('signup');
+            expect(result.data.analytics).to.equal(true);
+        });
+
+        it('should getConsentsHistory() call sendOnEndpoint with relativePath consents/history', async () => {
+            spy.on(srv, 'sendOnEndpoint', () =>
+                Promise.resolve({status: 200, data: {history: []}})
+            );
+
+            await srv.getConsentsHistory();
+
+            expect((srv.sendOnEndpoint as any).__spy.calls[0][0]).to.deep.equal({
+                verb: 'GET',
+                key: 'me',
+                relativePath: 'consents/history',
+            });
+        });
     });
 });
