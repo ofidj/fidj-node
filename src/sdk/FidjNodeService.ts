@@ -132,7 +132,8 @@ export class FidjNodeService implements IService {
             fidjId,
             !options || !Object.prototype.hasOwnProperty.call(options, 'crypto')
                 ? false
-                : options.crypto
+                : options.crypto,
+            options?.apiEndpoint
         );
 
         let bestUrls = [],

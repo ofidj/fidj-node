@@ -31,12 +31,14 @@ export interface EndpointCallInterface<TData = any> {
  * useDB : false by default
  * crypto : false by default
  * logLevel : NONE by default
+ * apiEndpoint : overrides the auto-detected API URL (useful for local dev against fidj-api sandbox)
  */
 export interface ModuleServiceInitOptionsInterface {
     prod?: boolean;
     useDB?: boolean;
     crypto?: boolean;
     logLevel?: LoggerLevelEnum;
+    apiEndpoint?: string;
 }
 
 export interface ModuleServiceLoginOptionsInterface {

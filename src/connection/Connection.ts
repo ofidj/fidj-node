@@ -19,6 +19,7 @@ export class Connection {
     public fidjId: string;
     public fidjVersion: string;
     public fidjCrypto: boolean;
+    public apiEndpoint: string;
     private _accessToken: string;
     private _accessTokenPrevious: string;
     private _idToken: string;
@@ -50,10 +51,11 @@ export class Connection {
         return !!this.client && this.client.isReady();
     }
 
-    async init(fidjVersion: string, fidjId: string, fidjCrypto: boolean) {
+    async init(fidjVersion: string, fidjId: string, fidjCrypto: boolean, apiEndpoint?: string) {
         this.fidjId = fidjId;
         this.fidjVersion = fidjVersion;
         this.fidjCrypto = fidjCrypto;
+        this.apiEndpoint = apiEndpoint;
 
         this._accessToken = 'v2.accessToken.' + this.fidjId;
         this._accessTokenPrevious = 'v2.accessTokenPrevious.' + this.fidjId;
@@ -419,6 +421,10 @@ export class Connection {
     async getApiEndpoints(
         options?: ConnectionFindOptionsInterface
     ): Promise<Array<EndpointInterface>> {
+        if (this.apiEndpoint) {
+            return [{key: 'fidj.override', url: this.apiEndpoint, blocked: false}];
+        }
+
         let ea: EndpointInterface[] = [
             {key: 'fidj.default', url: 'https://api.fidj.ovh/v3', blocked: false},
         ];

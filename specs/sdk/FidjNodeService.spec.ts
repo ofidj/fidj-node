@@ -98,6 +98,25 @@ describe('FidjNodeService', () => {
             });
     });
 
+    it('should init OK : apiEndpoint option overrides getApiEndpoints result', function (done) {
+        const srv = new FidjNodeService(_log, _q);
+        spy.on((srv as any).connection, 'verifyConnectionStates', (returns) => _q.resolve());
+        spy.on((srv as any).connection, 'setClient', (returns) => {});
+
+        srv.init('myApp', {prod: false, apiEndpoint: 'http://localhost:9999/v3'})
+            .then(async () => {
+                expect((srv as any).connection.apiEndpoint).eq('http://localhost:9999/v3');
+                const endpoints = await (srv as any).connection.getApiEndpoints();
+                expect(endpoints.length).eq(1);
+                expect(endpoints[0].url).eq('http://localhost:9999/v3');
+                expect(endpoints[0].key).eq('fidj.override');
+                done();
+            })
+            .catch(function (err) {
+                assert.fail(err);
+            });
+    });
+
     it('should init OK : zero-config with explicit fidjId still uses prod by default', function (done) {
         const srv = new FidjNodeService(_log, _q);
         spy.on((srv as any).connection, 'verifyConnectionStates', (returns) => _q.resolve());
