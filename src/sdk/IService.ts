@@ -1,6 +1,7 @@
 import {
     EndpointCallInterface,
     ModuleServiceInitOptionsInterface,
+    ModuleServiceLoginCallOptionsInterface,
     ModuleServiceLoginOptionsInterface,
 } from './Interfaces';
 import {ClientUser} from '../connection';
@@ -16,7 +17,11 @@ import {
 export interface IService {
     init(fidjId?: string, options?: ModuleServiceInitOptionsInterface): Promise<void>;
 
-    login(login: string, password: string): Promise<ClientUser>;
+    login(
+        login: string,
+        password: string,
+        options?: ModuleServiceLoginCallOptionsInterface
+    ): Promise<ClientUser>;
 
     loginInDemoMode(options?: ModuleServiceLoginOptionsInterface): Promise<ClientUser>;
 
@@ -25,7 +30,8 @@ export interface IService {
         login: string,
         password: string,
         fidjId?: string,
-        options?: ModuleServiceInitOptionsInterface
+        options?: ModuleServiceInitOptionsInterface,
+        loginOptions?: ModuleServiceLoginCallOptionsInterface
     ): Promise<ClientUser>;
 
     // Convenience: init in demo/sandbox mode

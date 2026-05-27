@@ -86,7 +86,8 @@ export class Client {
     public async login(
         login: string,
         password: string,
-        updateProperties?: any
+        updateProperties?: any,
+        options?: {autoSignup?: boolean}
     ): Promise<ClientTokens> {
         if (!this.URI) {
             console.error('no api uri');
@@ -96,12 +97,15 @@ export class Client {
         try {
             const urlLogin = this.URI + '/users';
 
-            const dataLogin = {
+            const dataLogin: any = {
                 name: login,
                 username: login,
                 email: login,
                 password: password,
             };
+            if (options?.autoSignup === false) {
+                dataLogin.autoSignup = false;
+            }
 
             const createdUser: ClientUser = (
                 (await new Ajax().post({
@@ -167,9 +171,15 @@ export class Client {
             ).data.token;
 
             return new ClientTokens(login, createdAccessToken, createdIdToken, createdRefreshToken);
-        } catch (e) {
+        } catch (e: any) {
             this.logger.warn('Login impossible', e);
-            return null;
+            // Rethrow with the HTTP status from Ajax/XhrErrorInterface so callers can react (401 vs 400 vs network).
+            const code = typeof e?.code === 'number' ? e.code : 500;
+            const reason =
+                (typeof e?.message === 'string' && e.message) ||
+                (typeof e?.reason === 'string' && e.reason) ||
+                'login-failed';
+            throw new FidjError(code, reason);
         }
     }
 
