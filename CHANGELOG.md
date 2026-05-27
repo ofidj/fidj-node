@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-05-27
+
+### Changed
+
+- **Contract types now come from `@ofidj/contracts`.** Previously, `src/api/` held a hard-copy of the 27 `FidjApi*` interfaces — a violation of single-source-of-truth that risked silent drift between fidj-node and fidj-api. Added `@ofidj/contracts` as a direct dependency; removed `src/api/` entirely; imports updated in `src/index.ts`, `src/sdk/IService.ts`, and `src/sdk/FidjNodeService.ts`.
+
+### Added
+
+- `bpInfo` from `@ofidj/contracts` is now transitively re-exported from `@ofidj/node` (previously not exported). Harmless addition.
+
 ## [1.0.0] - 2026-05-27
 
 ### Changed
