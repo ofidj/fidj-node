@@ -615,7 +615,7 @@ export class FidjNodeService implements IService {
         return answer;
     }
 
-    // Typed API convenience methods (using fidj-api-contracts)
+    // Typed API convenience methods (using @ofidj/contracts)
 
     public async getMe(): Promise<{status: number; data?: FidjApiUsersMeResponse}> {
         return this.sendOnEndpoint<void, FidjApiUsersMeResponse>({

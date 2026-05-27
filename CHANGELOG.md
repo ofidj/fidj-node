@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-05-27
+
+### Changed
+
+- **Renamed package from `fidj-node` to `@ofidj/node`.** Scope aligns with the `ofidj` GitHub organisation and the `@ofidj/*` package family (`@ofidj/angular`, `@ofidj/contracts`, `@ofidj/cli`).
+- Reset semver to `1.0.0`. Previous range `15.x` (aligned with Angular) is decoupled — this SDK is framework-free and follows independent semver. The HTTP contract version (`/v3` on fidj-api) is unchanged and unrelated to this semver.
+- The old `fidj-node` npm package is deprecated and no longer maintained; migrate by replacing `fidj-node` with `@ofidj/node` in `package.json` and updating imports (`from 'fidj-node'` → `from '@ofidj/node'`).
+
 ## [15.1.13] - 2025-06-30
 
 ### Added

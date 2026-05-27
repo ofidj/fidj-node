@@ -1023,7 +1023,7 @@ describe('FidjNodeService', () => {
         expect(srv.loginInDemoMode).to.have.been.called.exactly(1);
     });
 
-    // Typed convenience methods (fidj-api-contracts integration)
+    // Typed convenience methods (@ofidj/contracts integration)
     describe('Typed API methods', () => {
         let srv: FidjNodeService;
 
@@ -1031,7 +1031,7 @@ describe('FidjNodeService', () => {
             srv = new FidjNodeService(_log, _q);
         });
 
-        it('should export contract types from fidj-api-contracts', () => {
+        it('should export contract types from @ofidj/contracts', () => {
             // Verify the types are importable (compile-time check + runtime existence)
             const mockConsents: FidjApiConsentsResponse = {
                 terms: true,

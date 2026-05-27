@@ -1,4 +1,4 @@
-# Quickstart fidj-node
+# Quickstart `@ofidj/node`
 
 From `npm install` to your first login in under 15 minutes.
 
@@ -7,7 +7,7 @@ From `npm install` to your first login in under 15 minutes.
 ```bash
 mkdir my-fidj-app && cd my-fidj-app
 npm init -y
-npm install fidj-node
+npm install @ofidj/node
 ```
 
 **TypeScript (recommended):**
@@ -24,7 +24,7 @@ npx tsc --init
 Create `quickstart.ts`:
 
 ```typescript
-import {FidjNodeService} from 'fidj-node';
+import {FidjNodeService} from '@ofidj/node';
 
 async function main() {
     const fidj = new FidjNodeService();
@@ -65,7 +65,7 @@ npx ts-node quickstart.ts
 Create `quickstart.js`:
 
 ```javascript
-const {FidjNodeService} = require('fidj-node');
+const {FidjNodeService} = require('@ofidj/node');
 
 async function main() {
     const fidj = new FidjNodeService();
@@ -104,7 +104,7 @@ const user = await fidj.initAndLogin('quickstart@fidj.ovh', 'test');
 
 ```html
 <script type="module">
-import {FidjNodeService} from 'fidj-node';
+import {FidjNodeService} from '@ofidj/node';
 
 const fidj = new FidjNodeService();
 await fidj.init('fidj-sandbox-0123fe7ed0000001', {prod: false});
@@ -181,7 +181,7 @@ await fidj.init('fidj-sandbox-0123fe7ed0000001', {prod: false});
 The SDK can't reach any API endpoint. Check:
 - Network connectivity (`curl https://api.sandbox.fidj.ovh/v3`)
 - Correct `prod` flag (`prod: false` for sandbox)
-- SDK version (`npm ls fidj-node` - update if outdated)
+- SDK version (`npm ls @ofidj/node` - update if outdated)
 
 ### Error 404: `Need an initialized FidjService`
 

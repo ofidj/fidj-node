@@ -1,11 +1,22 @@
 {
-  "name": "fidj-node",
-  "version": "15.1.14",
+  "name": "@ofidj/node",
+  "version": "1.0.0",
   "author": "fidj",
   "description": "fidj node tools ",
   "keywords": [],
   "private": false,
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ofidj/fidj-node.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ofidj/fidj-node/issues"
+  },
+  "homepage": "https://fidj.ovh",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "./index.js",
   "types": "./index.d.ts",
   "scripts": {
