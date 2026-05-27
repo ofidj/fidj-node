@@ -12,7 +12,7 @@ import {
     FidjApiUsersMeResponse,
     FidjApiUsersMeDetailsResponse,
     FidjApiUsersMeUpdateRequest,
-} from '../api';
+} from '@ofidj/contracts';
 
 export interface IService {
     init(fidjId?: string, options?: ModuleServiceInitOptionsInterface): Promise<void>;
