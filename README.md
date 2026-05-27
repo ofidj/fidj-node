@@ -1,6 +1,8 @@
-# fidj-node
+# @ofidj/node
 
 > FIDJ node tools - A TypeScript library providing utilities for client authentication, session management, and more.
+>
+> _Renamed from `fidj-node` at 1.0.0. The old `fidj-node` package is deprecated; install `@ofidj/node`._
 
 ## 📋 Description
 
@@ -10,11 +12,11 @@ handling, and various utility functions. It's designed to simplify interactions 
 ## 🚀 Quick Start (5 minutes)
 
 ```bash
-npm install fidj-node
+npm install @ofidj/node
 ```
 
 ```typescript
-import {FidjNodeService} from 'fidj-node';
+import {FidjNodeService} from '@ofidj/node';
 
 const fidj = new FidjNodeService();
 

@@ -698,6 +698,21 @@ describe('Connection', () => {
             );
         });
 
+        it('should getApiEndpoints: apiEndpoint override wins over defaults and token-based lookup', async () => {
+            const srv = new Connection(_sdk, _storage, _log);
+            srv.apiEndpoint = 'http://localhost:9999/v3';
+
+            const endpoints = await srv.getApiEndpoints();
+            expect(endpoints.length).to.equal(1);
+            expect(endpoints[0].url).to.equal('http://localhost:9999/v3');
+            expect(endpoints[0].key).to.equal('fidj.override');
+
+            (srv as any).accessToken = mocks.tokens.withApis01;
+            const endpointsAfterToken = await srv.getApiEndpoints();
+            expect(endpointsAfterToken.length).to.equal(1);
+            expect(endpointsAfterToken[0].url).to.equal('http://localhost:9999/v3');
+        });
+
         it('should getApiEndpoints based on accessTokenPrev', async () => {
             const srv = new Connection(_sdk, _storage, _log);
 

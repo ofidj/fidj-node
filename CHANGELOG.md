@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-05-27
+
+### Changed
+
+- **Renamed package from `fidj-node` to `@ofidj/node`.** Scope aligns with the `ofidj` GitHub organisation and the `@ofidj/*` package family (`@ofidj/angular`, `@ofidj/contracts`, `@ofidj/generator-fidj`).
+- Reset semver to `1.0.0`. Previous range `15.x` (aligned with Angular) is decoupled — this SDK is framework-free and follows independent semver. The HTTP contract version (`/v3` on fidj-api) is unchanged and unrelated to this semver.
+- The old `fidj-node` npm package is deprecated and no longer maintained; migrate by replacing `fidj-node` with `@ofidj/node` in `package.json` and updating imports (`from 'fidj-node'` → `from '@ofidj/node'`).
+
+### Added
+
+- **FIDJ-42**: explicit `apiEndpoint?: string` option in `ModuleServiceInitOptionsInterface` for local-dev or custom-API overrides (instead of relying on the implicit `prod:false` fallback).
+- **FIDJ-40**: explicit `autoSignup?: boolean` option (default `true` for backward compat) on `login` — set to `false` for strict authentication (unknown user → 401, no auto-creation).
+- **FIDJ-40**: HTTP errors from `Client.login` now propagate with their original status code (401 unknown user, 400 bad credentials), instead of being collapsed to a generic 500.
+
 ## [15.1.13] - 2025-06-30
 
 ### Added

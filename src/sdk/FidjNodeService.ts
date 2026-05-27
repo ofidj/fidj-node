@@ -11,6 +11,7 @@ import {
     LoggerInterface,
     LoggerLevelEnum,
     ModuleServiceInitOptionsInterface,
+    ModuleServiceLoginCallOptionsInterface,
     ModuleServiceLoginOptionsInterface,
     SdkInterface,
 } from './Interfaces';
@@ -132,7 +133,8 @@ export class FidjNodeService implements IService {
             fidjId,
             !options || !Object.prototype.hasOwnProperty.call(options, 'crypto')
                 ? false
-                : options.crypto
+                : options.crypto,
+            options?.apiEndpoint
         );
 
         let bestUrls = [],
@@ -178,7 +180,11 @@ export class FidjNodeService implements IService {
         );
     }
 
-    public async login(login: string, password: string) {
+    public async login(
+        login: string,
+        password: string,
+        options?: ModuleServiceLoginCallOptionsInterface
+    ) {
         this.logger.log('fidj.sdk.service.login');
         if (!this.connection.isReady()) {
             throw new FidjError(404, 'Need an initialized FidjService');
@@ -187,10 +193,12 @@ export class FidjNodeService implements IService {
         try {
             await this._removeAll();
             await this._createSession(this.connection.fidjId);
-            const clientTokens = await this._loginInternal(login, password);
+            const clientTokens = await this._loginInternal(login, password, undefined, options);
             await this.connection.setConnection(clientTokens);
-        } catch (err) {
-            throw new FidjError(500, err.toString());
+        } catch (err: any) {
+            if (err instanceof FidjError) throw err;
+            const code = typeof err?.code === 'number' ? err.code : 500;
+            throw new FidjError(code, err?.toString ? err.toString() : String(err));
         }
 
         if (!this.sdk.useDB) {
@@ -255,10 +263,11 @@ export class FidjNodeService implements IService {
         login: string,
         password: string,
         fidjId?: string,
-        options?: ModuleServiceInitOptionsInterface
+        options?: ModuleServiceInitOptionsInterface,
+        loginOptions?: ModuleServiceLoginCallOptionsInterface
     ) {
         await this.init(fidjId, options);
-        return this.login(login, password);
+        return this.login(login, password, loginOptions);
     }
 
     // Convenience: init + loginInDemoMode in one call
@@ -606,7 +615,7 @@ export class FidjNodeService implements IService {
         return answer;
     }
 
-    // Typed API convenience methods (using fidj-api-contracts)
+    // Typed API convenience methods (using @ofidj/contracts)
 
     public async getMe(): Promise<{status: number; data?: FidjApiUsersMeResponse}> {
         return this.sendOnEndpoint<void, FidjApiUsersMeResponse>({
@@ -697,7 +706,8 @@ export class FidjNodeService implements IService {
     private async _loginInternal(
         login: string,
         password: string,
-        updateProperties?: any
+        updateProperties?: any,
+        options?: ModuleServiceLoginCallOptionsInterface
     ): Promise<ClientTokens> {
         this.logger.log('fidj.sdk.service._loginInternal');
         if (!this.connection.isReady()) {
@@ -706,7 +716,7 @@ export class FidjNodeService implements IService {
 
         await this.connection.logout();
 
-        return await this.connection.getClient().login(login, password, updateProperties);
+        return await this.connection.getClient().login(login, password, updateProperties, options);
     }
 
     private async _createSession(uid: string): Promise<void | ErrorInterface> {

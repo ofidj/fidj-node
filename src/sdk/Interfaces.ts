@@ -31,18 +31,30 @@ export interface EndpointCallInterface<TData = any> {
  * useDB : false by default
  * crypto : false by default
  * logLevel : NONE by default
+ * apiEndpoint : overrides the auto-detected API URL (useful for local dev against fidj-api sandbox)
  */
 export interface ModuleServiceInitOptionsInterface {
     prod?: boolean;
     useDB?: boolean;
     crypto?: boolean;
     logLevel?: LoggerLevelEnum;
+    apiEndpoint?: string;
 }
 
 export interface ModuleServiceLoginOptionsInterface {
     accessToken?: string;
     idToken?: string;
     refreshToken?: string;
+}
+
+/**
+ * Options for the standard email+password login() call.
+ * autoSignup: when true (default), an unknown email auto-creates an account (Fidj's optimistic
+ * auth — Zero-Friction signup, epic FIDJ-5/FIDJ-12). Pass false to force strict login: fidj-api
+ * returns 401 if the email is unknown.
+ */
+export interface ModuleServiceLoginCallOptionsInterface {
+    autoSignup?: boolean;
 }
 
 export interface SdkInterface {
