@@ -196,7 +196,9 @@ export class FidjNodeService implements IService {
             const clientTokens = await this._loginInternal(login, password, undefined, options);
             await this.connection.setConnection(clientTokens);
         } catch (err: any) {
-            if (err instanceof FidjError) throw err;
+            if (err instanceof FidjError) {
+                throw err;
+            }
             const code = typeof err?.code === 'number' ? err.code : 500;
             throw new FidjError(code, err?.toString ? err.toString() : String(err));
         }

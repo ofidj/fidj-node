@@ -21,9 +21,9 @@ const rl = readline.createInterface({
 });
 
 // Function to execute shell commands and return the output
-function execCommand(command) {
+function execCommand(command, opts) {
     try {
-        return execSync(command, {encoding: 'utf8'}).trim();
+        return execSync(command, {encoding: 'utf8', ...opts}).trim();
     } catch (error) {
         console.error(`Error executing command: ${command}`);
         console.error(error.message);
@@ -162,7 +162,7 @@ async function continueSquashing() {
         // Perform the squash using soft reset
         console.log('Squashing commits...');
         execCommand(`git reset --soft ${rootCommit}`);
-        execCommand(`git commit -m "${commitMessage}"`);
+        execCommand('git commit -F -', {input: commitMessage});
 
         // Switch back to the original branch
         execCommand(`git checkout ${currentBranch}`);

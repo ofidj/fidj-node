@@ -1,4 +1,8 @@
 {
-    "local.dependencies": {},
-    "remote.dependencies": {}
+    "local.dependencies": {
+        "@ofidj/contracts": "file:../fidj-api-contracts/dist"
+    },
+    "remote.dependencies": {
+        "@ofidj/contracts": "^3.6.22"
+    }
 }
