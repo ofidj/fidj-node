@@ -3,6 +3,6 @@
         "@ofidj/contracts": "file:../fidj-api-contracts/dist"
     },
     "remote.dependencies": {
-        "@ofidj/contracts": "^3.6.22"
+        "@ofidj/contracts": "^3.6.23"
     }
 }
