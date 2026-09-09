@@ -90,3 +90,9 @@ if (!session.roles.includes('Editor') && !session.roles.includes('Owner')) {
 Call it on every protected operation. It rejects tokens for another app, delegates signature and stored-session validation to the configured Fidj API, and returns current membership roles rather than cached JWT role claims. It fails closed on timeouts or invalid upstream responses. Keep the endpoint configuration server-controlled and use HTTPS outside loopback development. No app signing key is required in the consumer backend.
 
 The generated TypeScript starter and the mleweb example exercise this flow. This helper requires a runtime with `fetch` and `AbortSignal.timeout`; the examples and CI target Node 22/24.
+
+## Account recovery and verification
+
+After `init`, call `fidjForgotPasswordRequest(email)` for a neutral reset request, `resetPassword({token, password})` to consume a link, or `verifyEmail({token})` for explicit confirmation. These three methods work without an authenticated session. `resendVerification()` requires a signed-in session; `getMe()` returns `data.user.verified`. A reset changes the shared identity password and revokes existing sessions across apps.
+
+Requires the coordinated 3.6.24 API and contracts changes. Passwords must contain at least 12 characters and no more than 72 UTF-8 bytes. Email links point to the API’s configured account UI.

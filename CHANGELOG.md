@@ -1,5 +1,7 @@
 # Changelog
 
+- Add shared-account password recovery and email verification integration.
+
 ## 3.6.24 — Unreleased
 
 - Add verifyAppSession for server-side audience/session verification and live membership roles; used by the generated TypeScript starter.

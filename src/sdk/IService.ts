@@ -1,3 +1,4 @@
+import {FidjApiResetPasswordRequest, FidjApiVerifyEmailRequest} from '@ofidj/contracts';
 import {
     EndpointCallInterface,
     ModuleServiceInitOptionsInterface,
@@ -40,6 +41,11 @@ export interface IService {
     sendOnEndpoint<TData = any, TResponse = any>(
         input: EndpointCallInterface<TData>
     ): Promise<{status: number; data?: TResponse}>;
+
+    fidjForgotPasswordRequest(email: string): Promise<void>;
+    resetPassword(data: FidjApiResetPasswordRequest): Promise<void>;
+    verifyEmail(data: FidjApiVerifyEmailRequest): Promise<void>;
+    resendVerification(): Promise<void>;
 
     // Typed API convenience methods
     getMe(): Promise<{status: number; data?: FidjApiUsersMeResponse}>;

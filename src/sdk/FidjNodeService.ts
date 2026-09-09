@@ -27,6 +27,8 @@ import {
     FidjApiUsersMeResponse,
     FidjApiUsersMeDetailsResponse,
     FidjApiUsersMeUpdateRequest,
+    FidjApiResetPasswordRequest,
+    FidjApiVerifyEmailRequest,
 } from '@ofidj/contracts';
 
 // TODO const PouchDB = window['PouchDB'] || require('pouchdb').default;
@@ -674,24 +676,31 @@ export class FidjNodeService implements IService {
         });
     }
 
-    public async fidjForgotPasswordRequest(email: string) {
-        const bestUrls = await this.connection.getApiEndpoints({filter: 'theBestOne'});
-        if (!bestUrls || bestUrls.length !== 1) {
-            throw new FidjError(
-                400,
-                'fidj.sdk.service.fidjForgotPasswordRequest : api endpoint does not exist.'
-            );
-        }
+    public async fidjForgotPasswordRequest(email: string): Promise<void> {
+        await this.accountPost('/me/forgot', {email});
+    }
 
-        const query = new Ajax();
-        await query.post({
-            url: bestUrls[0].url + '/me/forgot',
-            // not used : withCredentials: true,
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-            },
-            data: {email},
+    public async resetPassword(data: FidjApiResetPasswordRequest): Promise<void> {
+        await this.accountPost('/me/reset-password', data);
+        await this.logout(true);
+    }
+
+    public async verifyEmail(data: FidjApiVerifyEmailRequest): Promise<void> {
+        await this.accountPost('/users/verify-email', data);
+    }
+
+    public async resendVerification(): Promise<void> {
+        await this.sendOnEndpoint({verb: 'POST', key: 'me', relativePath: 'resend-verification'});
+    }
+
+    private async accountPost(path: string, data: unknown): Promise<void> {
+        const endpoints = await this.connection.getApiEndpoints({filter: 'theBestOne'});
+        if (!endpoints || endpoints.length !== 1)
+            throw new FidjError(400, 'No configured account API endpoint.');
+        await new Ajax().post({
+            url: endpoints[0].url.replace(/\/$/, '') + path,
+            headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+            data,
             timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
         });
     }
