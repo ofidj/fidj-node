@@ -1,5 +1,7 @@
 # Changelog
 
+- Read effective roles live, including app groups; fail closed when the session is invalid.
+
 - Add shared-account password recovery and email verification integration.
 
 ## 3.6.24 — Unreleased

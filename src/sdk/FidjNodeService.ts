@@ -20,6 +20,7 @@ import urlJoin from 'proper-url-join';
 import {FidjError} from './FidjError';
 import {IService} from './IService';
 import {bpInfo} from '../bpInfo';
+import {verifyAppSession} from '../server/verifyAppSession';
 import {
     FidjApiConsentsResponse,
     FidjApiConsentsUpdateRequest,
@@ -333,7 +334,16 @@ export class FidjNodeService implements IService {
     }
 
     public async fidjRoles(): Promise<Array<any>> {
-        return JSON.parse(await this.connection.getIdPayload({roles: []})).roles;
+        if (!this.isLoggedIn() || this.connection.getUser()?.id === 'demo') {
+            return JSON.parse(await this.connection.getIdPayload({roles: []})).roles || [];
+        }
+        const endpoints = await this.connection.getApiEndpoints({filter: 'theBestOne'});
+        if (endpoints.length !== 1) throw new FidjError(503, 'No identity endpoint is available.');
+        const session = await verifyAppSession(await this.fidjGetIdToken(), {
+            appId: this.connection.fidjId,
+            apiEndpoint: endpoints[0].url,
+        });
+        return session.roles;
     }
 
     public async fidjMessage(): Promise<string> {

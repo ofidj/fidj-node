@@ -96,3 +96,8 @@ The generated TypeScript starter and the mleweb example exercise this flow. This
 After `init`, call `fidjForgotPasswordRequest(email)` for a neutral reset request, `resetPassword({token, password})` to consume a link, or `verifyEmail({token})` for explicit confirmation. These three methods work without an authenticated session. `resendVerification()` requires a signed-in session; `getMe()` returns `data.user.verified`. A reset changes the shared identity password and revokes existing sessions across apps.
 
 Requires the coordinated 3.6.24 API and contracts changes. Passwords must contain at least 12 characters and no more than 72 UTF-8 bytes. Email links point to the API’s configured account UI.
+
+
+`fidjRoles()` also reads effective roles from the API for signed-in sessions, including app-group grants and removals. It can now reject when the session or API is unavailable; handle that error instead of relying on cached access. Demo mode keeps its local behavior. `verifyAppSession` remains the check to use on protected backend operations; client UI checks alone do not authorize a request.
+
+Authenticated `PUT /me` password changes require `{currentPassword, password}`. They apply the same password limits as reset, revoke existing sessions, and invalidate outstanding reset links. Sign in again after success. Name-only updates do not change credentials.
