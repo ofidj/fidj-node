@@ -1,3 +1,4 @@
+import {FidjOidcClient} from '../identity/FidjOidcClient';
 import * as tools from '../tools';
 import * as connection from '../connection';
 import {Ajax, ClientTokens, OwnerUser} from '../connection';
@@ -16,7 +17,6 @@ import {
     SdkInterface,
 } from './Interfaces';
 import {LoggerService} from './LoggerService';
-import urlJoin from 'proper-url-join';
 import {FidjError} from './FidjError';
 import {IService} from './IService';
 import {bpInfo} from '../bpInfo';
@@ -282,7 +282,21 @@ export class FidjNodeService implements IService {
         return this.loginInDemoMode();
     }
 
+    private oidcClient: FidjOidcClient;
+    private oidc() {
+        if (this.oidcClient) return this.oidcClient;
+        if (typeof sessionStorage === 'undefined' || !this.connection.fidjId) return undefined;
+        const saved = sessionStorage.getItem('fidj.oidc.' + this.connection.fidjId + '.config');
+        if (!saved) return undefined;
+        const options = JSON.parse(saved);
+        const expectedApi = this.connection.apiEndpoint || (this.sdk.prod ? 'https://api.fidj.ovh/v3' : 'https://api.sandbox.fidj.ovh/v3');
+        if (options.apiEndpoint.replace(/\/$/, '') !== expectedApi.replace(/\/$/, '') || options.clientId !== this.connection.fidjId) return undefined;
+        this.oidcClient = new FidjOidcClient({...options, storage: sessionStorage});
+        return this.oidcClient;
+    }
+
     public isLoggedIn(): boolean {
+        if (this.oidc()) return this.oidc().hasSession();
         return this.connection.isLogin();
     }
 
@@ -351,6 +365,7 @@ export class FidjNodeService implements IService {
     }
 
     public async logout(force?: boolean): Promise<void | ErrorInterface> {
+        if (this.oidc()) return this.oidc().logout();
         if (!this.connection.getClient() && !force) {
             return this._removeAll().then(() => {
                 return this.session.create(this.connection.fidjId, true);
@@ -377,6 +392,7 @@ export class FidjNodeService implements IService {
             fnInitFirstData_Arg?: any;
         } = {forceRefresh: false}
     ): Promise<void | ErrorInterface> {
+        if (this.oidc()) {await this.oidc().request('/me'); return;}
         this.logger.log('fidj.sdk.service.sync');
         this.logger.log('fidj.sdk.service.sync: you ar not using DB - no sync available.');
 
@@ -557,6 +573,10 @@ export class FidjNodeService implements IService {
     public async sendOnEndpoint<TData = any, TResponse = any>(
         input: EndpointCallInterface<TData>
     ): Promise<{status: number; data?: TResponse}> {
+        if (this.oidc()) {
+            const base = input.defaultKeyUrl ? new URL(input.defaultKeyUrl).pathname.replace(/^\/v3/, '') : '/' + (input.key || 'me');
+            return this.oidc().request(base + (input.relativePath ? '/' + input.relativePath : ''), input.verb, input.data);
+        }
         await this.sync();
 
         const filter: EndpointFilterInterface = input.key ? {key: input.key} : null;
@@ -568,7 +588,7 @@ export class FidjNodeService implements IService {
         let firstEndpointUrl =
             !endpoints || endpoints.length !== 1 ? input.defaultKeyUrl : endpoints[0].url;
         if (input.relativePath) {
-            firstEndpointUrl = urlJoin(firstEndpointUrl, input.relativePath);
+            firstEndpointUrl = new URL(input.relativePath.replace(/^\/+/, ''), firstEndpointUrl.replace(/\/?$/, '/')).href;
         }
         const jwt = await this.connection.getIdToken();
         let answer: {status: number; data?: TResponse};
@@ -716,6 +736,7 @@ export class FidjNodeService implements IService {
     }
 
     public async fidjGetIdToken() {
+        if (this.oidc()) return this.oidc().accessToken();
         return this.connection.getIdToken();
     }
 

@@ -101,3 +101,42 @@ Requires the coordinated 3.6.24 API and contracts changes. Passwords must contai
 `fidjRoles()` also reads effective roles from the API for signed-in sessions, including app-group grants and removals. It can now reject when the session or API is unavailable; handle that error instead of relying on cached access. Demo mode keeps its local behavior. `verifyAppSession` remains the check to use on protected backend operations; client UI checks alone do not authorize a request.
 
 Authenticated `PUT /me` password changes require `{currentPassword, password}`. They apply the same password limits as reset, revoke existing sessions, and invalidate outstanding reset links. Sign in again after success. Name-only updates do not change credentials.
+
+## Integrated OIDC beta
+
+Use Node 22 LTS or later. `FidjOidcClient` uses `oauth4webapi` for protocol validation; the configured issuer and REST API must share an origin. Register the exact callback with the app owner console first.
+
+```typescript
+import {FidjOidcClient} from '@ofidj/node';
+const identity = new FidjOidcClient({
+    issuer: 'https://api.sandbox.fidj.ovh/oidc',
+    clientId: 'YOUR_APP_ID',
+    redirectUri: window.location.origin + window.location.pathname,
+    apiEndpoint: 'https://api.sandbox.fidj.ovh/v3',
+    storage: sessionStorage,
+});
+// On the sign-in action:
+window.location.assign(await identity.beginLogin());
+// On the registered callback, before opening application content:
+await identity.completeLogin(new URL(window.location.href));
+const accessToken = await identity.accessToken();
+```
+
+These are two lifecycle steps, not consecutive actions on one page load. Remove callback query parameters from browser history after capturing the callback. Transactions expire after ten minutes and are consumed once. The client validates issuer, state, nonce and ID-token signatures. Refresh calls are serialized within one client instance; expired/replayed sessions require login again. `logout()` revokes the app grant and clears local session storage.
+
+The generated same-origin module and `FidjNodeService` facade recognize this same-tab session. The facade retains its historical API token-getter name for existing consumers; use `accessToken()` for new OIDC API integrations. The standalone ID token is identity evidence, not a REST bearer credential. A production backend-for-frontend with HttpOnly cookies remains a separate integration choice for confidential applications.
+
+Backend tenant authorization:
+
+```typescript
+import {verifyOrganizationSession} from '@ofidj/node';
+const access = await verifyOrganizationSession(bearerToken, {
+    appId: process.env.FIDJ_APP_ID!,
+    apiEndpoint: process.env.FIDJ_API_ENDPOINT!,
+    organizationId,
+    permission: 'projects:write',
+});
+// Scope the application database query to access.organizationId as well.
+```
+
+`verifyAppSession` now supports live opaque OIDC access tokens and validates the authoritative app/subject response. An app-wide role does not grant organization access. The integrated API tests exercise the shipped OIDC client, backend verifier and facade. Hosted issuer activation, independent conformance and stable package publication remain release gates.

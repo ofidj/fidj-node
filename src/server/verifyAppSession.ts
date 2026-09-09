@@ -26,9 +26,10 @@ export async function verifyAppSession(
 ): Promise<VerifiedAppSession> {
     let payload: any;
     try {
-        if (!token || token.length > 16384 || token.split('.').length !== 3) {
+        if (!token || token.length > 16384) {
             throw new Error();
         }
+        if (token.split('.').length !== 3) {payload = null;} else {
         const encoded = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
         payload = JSON.parse(Base64.decode(encoded.padEnd(Math.ceil(encoded.length / 4) * 4, '=')));
         if (
@@ -37,6 +38,7 @@ export async function verifyAppSession(
             typeof payload.name !== 'string'
         ) {
             throw new Error();
+        }
         }
     } catch {
         throw new SessionVerificationError(401, 'Sign in to this app.');
@@ -72,10 +74,21 @@ export async function verifyAppSession(
     } catch {
         throw new SessionVerificationError(503, 'Invalid identity-service response.');
     }
+    if (!payload && (typeof (result as any).subject !== 'string' || (result as any).appId !== options.appId)) throw new SessionVerificationError(401, 'App session scope mismatch.');
     return {
-        subject: payload.sub,
-        username: payload.name,
+        subject: payload?.sub || (result as any).subject,
+        username: payload?.name || (result as any).username,
         appId: options.appId,
         roles: result.roles.map((role) => role.type),
     };
+}
+
+export async function verifyOrganizationSession(token: string, options: {appId: string; apiEndpoint: string; organizationId: string; permission?: string}) {
+    const session = await verifyAppSession(token, options);
+    let response: Response;
+    try {response = await fetch(`${options.apiEndpoint.replace(/\/$/, '')}/apps/${encodeURIComponent(options.appId)}/organizations/${encodeURIComponent(options.organizationId)}`, {headers: {Authorization: `Bearer ${token}`}, redirect: 'error', signal: AbortSignal.timeout(5000)});} catch {throw new SessionVerificationError(503, 'Identity service unavailable.');}
+    if (!response.ok) throw new SessionVerificationError(response.status >= 500 ? 503 : 401, 'Organization access denied.');
+    const result = await response.json();
+    if (result.organization?.id !== options.organizationId || !Array.isArray(result.access?.permissions) || (options.permission && !result.access.permissions.includes(options.permission))) throw new SessionVerificationError(401, 'Organization permission denied.');
+    return {...session, organizationId: options.organizationId, permissions: result.access.permissions as string[]};
 }

@@ -1,5 +1,7 @@
 # Changelog
 
+- Add validated OIDC/PKCE client, same-tab facade handoff and live tenant verification; remove the obsolete URL-join dependency and update Axios.
+
 - Read effective roles live, including app groups; fail closed when the session is invalid.
 
 - Add shared-account password recovery and email verification integration.
