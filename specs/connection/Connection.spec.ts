@@ -135,29 +135,18 @@ describe('Connection', () => {
                 });
         });
 
-        it('should DELETE a URI', (done) => {
-            // Mock axios.delete to return a successful response
-            const mockResponse = {
-                status: 204,
-                data: _dogName,
-            };
-            spy.on(axios, 'delete', (returns) => Promise.resolve(mockResponse));
-
-            new Ajax()
-                .delete({url: _dogURI + '/' + _dogName, data: _dogData})
-                .then((response) => {
-                    // Verify axios.delete was called with the right arguments
-                    expect(axios.delete).to.have.been.called.with(_dogURI + '/' + _dogName, {
-                        headers: undefined,
-                    });
-
-                    // Verify the response data
-                    expect(response.data).to.equal(_dogName);
-                    done();
-                })
-                .catch((err) => {
-                    fail(err.toString());
-                });
+        it('should DELETE a URI with its request body', async () => {
+            const mockResponse = {status: 204, data: _dogName};
+            spy.on(axios, 'delete', () => Promise.resolve(mockResponse));
+            const response = await new Ajax().delete({
+                url: _dogURI + '/' + _dogName,
+                data: _dogData,
+            });
+            expect(axios.delete).to.have.been.called.with(_dogURI + '/' + _dogName, {
+                headers: undefined,
+                data: _dogData,
+            });
+            expect(response.data).to.equal(_dogName);
         });
 
         it('should POST fail due to timeout (408) on fake url', async () => {

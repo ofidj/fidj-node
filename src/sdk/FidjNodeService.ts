@@ -598,7 +598,7 @@ export class FidjNodeService implements IService {
                         Authorization: 'Bearer ' + jwt,
                     },
                     timeout: input.timeout,
-                    // not used: data: data
+                    data: input.data,
                 });
                 break;
             default:
@@ -611,7 +611,7 @@ export class FidjNodeService implements IService {
                         Authorization: 'Bearer ' + jwt,
                     },
                     timeout: input.timeout,
-                    // not used: data: data
+                    data: input.data,
                 });
         }
         return answer;

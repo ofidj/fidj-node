@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.6.24 — Unreleased
+
+- Add verifyAppSession for server-side audience/session verification and live membership roles; used by the generated TypeScript starter.
+- Align the Mocha test runner with the API for current Node runtimes.
+
+- Preserve DELETE request bodies through the SDK and Axios adapter, including explicit app-departure confirmation.
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

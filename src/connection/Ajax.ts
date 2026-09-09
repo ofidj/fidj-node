@@ -190,7 +190,7 @@ export class Ajax {
         if (args.headers) {
             opt.headers = args.headers;
         }
-        const options = {headers: opt.headers};
+        const options = {headers: opt.headers, data: opt.data};
         if (args.timeout) {
             options['timeout'] = args.timeout;
         }

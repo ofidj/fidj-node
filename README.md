@@ -70,3 +70,23 @@ See [Changelog](./CHANGELOG.md).
 ## 📄 License
 
 MIT
+
+## Server-side app sessions
+
+The 3.6.24 development version exports `verifyAppSession` for a Node backend:
+
+```typescript
+import {verifyAppSession} from '@ofidj/node';
+
+const session = await verifyAppSession(bearerToken, {
+    appId: process.env.FIDJ_APP_ID!,
+    apiEndpoint: process.env.FIDJ_API_ENDPOINT!,
+});
+if (!session.roles.includes('Editor') && !session.roles.includes('Owner')) {
+    // Respond with 403 before executing the protected operation.
+}
+```
+
+Call it on every protected operation. It rejects tokens for another app, delegates signature and stored-session validation to the configured Fidj API, and returns current membership roles rather than cached JWT role claims. It fails closed on timeouts or invalid upstream responses. Keep the endpoint configuration server-controlled and use HTTPS outside loopback development. No app signing key is required in the consumer backend.
+
+The generated TypeScript starter and the mleweb example exercise this flow. This helper requires a runtime with `fetch` and `AbortSignal.timeout`; the examples and CI target Node 22/24.
