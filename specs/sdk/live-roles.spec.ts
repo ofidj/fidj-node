@@ -4,7 +4,11 @@ import {createServer} from 'http';
 import {AddressInfo} from 'net';
 import {FidjNodeService} from '../../src';
 use(spies);
-describe('Live SDK roles', () => {
+describe('Live SDK roles', function () {
+    // This spec starts a real HTTP server and makes three SDK round-trips
+    // through it. Mocha's 2s default is a budget for pure functions: it holds
+    // on a developer machine (~16ms) and has timed out on a CI agent.
+    this.timeout(30000);
     it('reads current direct/group access and rejects a revoked session instead of cached roles', async () => {
         let roles = ['Free', 'Editor'];
         let revoked = false;
@@ -50,6 +54,9 @@ describe('Live SDK roles', () => {
         } finally {
             spy.restore(sdk);
             spy.restore(connection);
+            // close() alone waits for keep-alive sockets, which can hold
+            // teardown open long after the assertions are done.
+            server.closeAllConnections();
             await new Promise<void>((resolve) => server.close(() => resolve()));
         }
     });
