@@ -4,7 +4,7 @@
 
 Dated entries are historical; current workflow is in the package README.
 
-## [Unreleased]
+## [3.6.25] - 2026-09-11
 
 - Say plainly that no OpenID Connect provider answered, and that OIDC support is experimental client-side, instead of surfacing a bare fetch failure.
 - Add validated OIDC/PKCE client, same-tab facade handoff and live tenant verification; remove the obsolete URL-join dependency and update Axios.
