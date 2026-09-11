@@ -1,24 +1,19 @@
 # Changelog
 
+- Forward explicit agreement choice/version in password login without automatically granting consent.
+
+Dated entries are historical; current workflow is in the package README.
+
+## [Unreleased]
+
+- Say plainly that no OpenID Connect provider answered, and that OIDC support is experimental client-side, instead of surfacing a bare fetch failure.
 - Add validated OIDC/PKCE client, same-tab facade handoff and live tenant verification; remove the obsolete URL-join dependency and update Axios.
-
 - Read effective roles live, including app groups; fail closed when the session is invalid.
-
 - Add shared-account password recovery and email verification integration.
-
-## 3.6.24 — Unreleased
 
 - Add verifyAppSession for server-side audience/session verification and live membership roles; used by the generated TypeScript starter.
 - Align the Mocha test runner with the API for current Node runtimes.
-
 - Preserve DELETE request bodies through the SDK and Axios adapter, including explicit app-departure confirmation.
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
 
 ## [15.1.14] - 2025-12-03
 

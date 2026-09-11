@@ -10,8 +10,19 @@ export class FidjOidcClient {
         this.prefix = 'fidj.oidc.' + options.clientId;
     }
     private network() {return {...(this.options.issuer.startsWith('http:') ? {[oauth.allowInsecureRequests]: true} : {}), signal: AbortSignal.timeout(10000)};}
+    // The API's provider is beta and serves nothing until an operator sets an
+    // issuer and signing keys, so "no provider answered" is the common case.
+    // Anyone pointing an app at an issuer that does not answer deserves that
+    // sentence, not a bare 'fetch failed'.
+    private async discover(issuer: URL) {
+        try {
+            return await oauth.processDiscoveryResponse(issuer, await oauth.discoveryRequest(issuer, {...this.network(), algorithm: 'oidc'}));
+        } catch (cause) {
+            throw Object.assign(new Error('No OpenID Connect provider answered at ' + issuer.href + '. OIDC support is beta: check the deployment configures an issuer and signing keys before using it.'), {cause});
+        }
+    }
     private async discovery() {
-        if (!this.metadata) {const issuer = new URL(this.options.issuer); this.metadata = await oauth.processDiscoveryResponse(issuer, await oauth.discoveryRequest(issuer, {...this.network(), algorithm: 'oidc'}));
+        if (!this.metadata) {const issuer = new URL(this.options.issuer); this.metadata = await this.discover(issuer);
             for (const endpoint of ['authorization_endpoint', 'token_endpoint', 'jwks_uri']) if (new URL(String(this.metadata[endpoint])).origin !== issuer.origin) throw new Error('Unexpected identity endpoint origin');
         }
         return this.metadata;

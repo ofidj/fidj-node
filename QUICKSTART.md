@@ -1,224 +1,75 @@
-# Quickstart `@ofidj/node`
+# SDK quickstart
 
-From `npm install` to your first login in under 15 minutes.
+Install `@ofidj/node` in your app. For coordinated unpublished changes, use the built workspace SDK; see the [local walkthrough](../LOCAL-DEVELOPMENT.md).
 
-## 1. Install
-
-```bash
-mkdir my-fidj-app && cd my-fidj-app
-npm init -y
+```sh
 npm install @ofidj/node
 ```
 
-**TypeScript (recommended):**
+## Local login
 
-```bash
-npm install -D typescript ts-node @types/node
-npx tsc --init
-```
-
-## 2. Init + Login
-
-### Node.js (TypeScript)
-
-Create `quickstart.ts`:
-
-```typescript
-import {FidjNodeService} from '@ofidj/node';
-
-async function main() {
-    const fidj = new FidjNodeService();
-
-    // Init on sandbox (zero-config)
-    await fidj.init('fidj-sandbox-0123fe7ed0000001', {prod: false});
-    console.log('Connected to sandbox');
-
-    // Login (auto-creates user on sandbox)
-    const user = await fidj.login('quickstart@fidj.ovh', 'test');
-    console.log('Logged in as:', user.username);
-    console.log('Roles:', user.roles);
-
-    // Get your ID token (JWT)
-    const idToken = await fidj.fidjGetIdToken();
-    console.log('ID token:', idToken.substring(0, 40) + '...');
-
-    // Check roles
-    const roles = await fidj.fidjRoles();
-    console.log('Roles:', roles);
-
-    // Logout
-    await fidj.logout(true);
-    console.log('Logged out');
-}
-
-main().catch(console.error);
-```
-
-Run it:
-
-```bash
-npx ts-node quickstart.ts
-```
-
-### Node.js (JavaScript)
-
-Create `quickstart.js`:
+Start the workspace stack first. Run this JavaScript in your application (CommonJS), using the seeded local account:
 
 ```javascript
 const {FidjNodeService} = require('@ofidj/node');
+const {createInterface} = require('node:readline/promises');
 
 async function main() {
     const fidj = new FidjNodeService();
-
-    await fidj.init('fidj-sandbox-0123fe7ed0000001', {prod: false});
-    console.log('Connected to sandbox');
-
-    const user = await fidj.login('quickstart@fidj.ovh', 'test');
-    console.log('Logged in as:', user.username, '- Roles:', user.roles);
-
-    const idToken = await fidj.fidjGetIdToken();
-    console.log('ID token:', idToken.substring(0, 40) + '...');
-
+    await fidj.init('fidj-local-studio', {
+        prod: false,
+        apiEndpoint: 'http://localhost:3201/v3',
+    });
+    const response = await fetch('http://localhost:3201/v3/apps/fidj-local-studio');
+    const {app} = await response.json();
+    console.log(app.agreement.text);
+    const prompt = createInterface({input: process.stdin, output: process.stdout});
+    const answer = await prompt.question(`Accept version ${app.agreement.version}? Type yes: `);
+    prompt.close();
+    if (answer !== 'yes') return;
+    await fidj.login('maya@fidj.local', 'local-member-only', {
+        termsAccepted: true,
+        termsVersion: app.agreement.version,
+    });
+    console.log('Roles:', await fidj.fidjRoles());
     await fidj.logout(true);
-    console.log('Done!');
 }
-
 main().catch(console.error);
 ```
 
-Run it:
+TypeScript/browser bundles import `FidjNodeService` from `@ofidj/node`. Browser apps need an allowed origin and their own public app ID. Never include an app private key in browser code.
 
-```bash
-node quickstart.js
-```
+## Environments
 
-### One-liner (init + login combined)
+| Target | Initialization |
+| --- | --- |
+| Local | Explicit local app ID and `apiEndpoint` as above |
+| Hosted sandbox | `init()` or an explicit sandbox ID with `{prod: false}` |
+| Production | `init('YOUR_APP_ID', {prod: true})` |
+| Offline UI demo | `initDemo()`; mock sessions provide no server authorization |
 
-```typescript
-const fidj = new FidjNodeService();
-const user = await fidj.initAndLogin('quickstart@fidj.ovh', 'test');
-// That's it - you're authenticated
-```
+Obtain production IDs from the Fidj owner console. Hosted examples require a configured app/account; do not assume arbitrary credentials work. SDK auto-signup and the generated UI's strict sign-in are separate choices. New passwords require at least 12 characters and at most 72 UTF-8 bytes.
 
-### Web (browser / bundler)
-
-```html
-<script type="module">
-import {FidjNodeService} from '@ofidj/node';
-
-const fidj = new FidjNodeService();
-await fidj.init('fidj-sandbox-0123fe7ed0000001', {prod: false});
-const user = await fidj.login('web-user@fidj.ovh', 'test');
-document.getElementById('status').textContent = `Hello ${user.username}`;
-</script>
-```
-
-## 3. Go further
-
-### Call an API endpoint
+## Common operations
 
 ```typescript
-// POST to create something
+const roles = await fidj.fidjRoles(); // Current API roles; handle failures.
+await fidj.sync({forceRefresh: true});
+const token = await fidj.fidjGetIdToken();
 const response = await fidj.sendOnEndpoint({
-    verb: 'POST',
-    key: 'apps',
-    data: {title: 'MyApp'},
-});
-console.log('Created:', response.data);
-
-// GET details
-const details = await fidj.sendOnEndpoint({
     verb: 'GET',
     key: 'apps',
     relativePath: `${appId}/details`,
 });
 ```
 
-### Refresh tokens
-
-```typescript
-// Force token refresh
-await fidj.sync({forceRefresh: true});
-const freshToken = await fidj.fidjGetIdToken();
-```
-
-### Demo mode (no server needed)
-
-```typescript
-const fidj = new FidjNodeService();
-const user = await fidj.initDemo();
-// Uses mock JWT tokens, valid 24h - great for UI prototyping
-```
-
-### Production
-
-```typescript
-const fidj = new FidjNodeService();
-// prod: true is the default
-await fidj.init('your-app-id');
-const user = await fidj.login('real@user.com', 'password');
-```
+Owner details require owner authorization. Client role checks only control UI; use `verifyAppSession` for protected backend operations. Recovery, verification and experimental identity helpers are described in the [SDK README](README.md).
 
 ## Troubleshooting
 
-### Error 400: `Need a fidjId`
+- Initialize before login; pass a valid app ID when supplying options.
+- Check API `/v3/status`, endpoint, app ID, allowed origin and SDK/API compatibility.
+- Handle login errors explicitly; do not read user fields after a failed call.
+- Local accounts and app IDs created manually disappear when the API restarts.
 
-You called `init()` without a fidjId and with options. Either use zero-config (no args) or pass a valid fidjId.
-
-```typescript
-// Wrong
-await fidj.init(undefined, {prod: false});
-
-// Right - zero-config sandbox
-await fidj.init();
-
-// Right - explicit sandbox
-await fidj.init('fidj-sandbox-0123fe7ed0000001', {prod: false});
-```
-
-### Error 404: `Need one connection - or too old SDK version`
-
-The SDK can't reach any API endpoint. Check:
-- Network connectivity (`curl https://api.sandbox.fidj.ovh/v3`)
-- Correct `prod` flag (`prod: false` for sandbox)
-- SDK version (`npm ls @ofidj/node` - update if outdated)
-
-### Error 404: `Need an initialized FidjService`
-
-You called `login()` before `init()`. Always init first:
-
-```typescript
-// Wrong
-await fidj.login('user@fidj.ovh', 'test');
-
-// Right
-await fidj.init('fidj-sandbox-0123fe7ed0000001', {prod: false});
-await fidj.login('user@fidj.ovh', 'test');
-```
-
-### Error 500: `Login failed` / timeout
-
-Authentication server unreachable or credentials invalid. Steps:
-1. Check sandbox status: `curl https://api.sandbox.fidj.ovh/v3`
-2. On sandbox, any email/password combo auto-creates a user
-3. Check `DEFAULT_TIMEOUT_MS` (60s) - increase for slow networks
-
-### `TypeError: Cannot read properties of undefined`
-
-Usually means you're using the result of a failed call. Wrap in try/catch:
-
-```typescript
-try {
-    const user = await fidj.login('user@fidj.ovh', 'test');
-    console.log(user.username);
-} catch (err) {
-    console.error('Login failed:', err.code, err.reason);
-}
-```
-
-## Environments
-
-| Environment | fidjId | Options | API URL |
-|-------------|--------|---------|---------|
-| Sandbox | `fidj-sandbox-0123fe7ed0000001` | `{prod: false}` | https://api.sandbox.fidj.ovh/v3 |
-| Production | Your app ID | `{prod: true}` (default) | https://api.fidj.ovh/v3 |
+For SDK changes, follow the [TDD workflow](../AGENTS.md#tdd-red--green--refactor).

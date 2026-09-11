@@ -55,6 +55,8 @@ export interface ModuleServiceLoginOptionsInterface {
  */
 export interface ModuleServiceLoginCallOptionsInterface {
     autoSignup?: boolean;
+    termsAccepted?: boolean;
+    termsVersion?: string;
 }
 
 export interface SdkInterface {

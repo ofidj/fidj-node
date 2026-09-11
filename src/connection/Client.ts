@@ -87,7 +87,7 @@ export class Client {
         login: string,
         password: string,
         updateProperties?: any,
-        options?: {autoSignup?: boolean}
+        options?: {autoSignup?: boolean; termsAccepted?: boolean; termsVersion?: string}
     ): Promise<ClientTokens> {
         if (!this.URI) {
             console.error('no api uri');
@@ -120,6 +120,8 @@ export class Client {
             const urlToken = this.URI + '/apps/' + this.appId + '/tokens';
             const dataToken = {
                 grant_type: 'access_token',
+                termsAccepted: options?.termsAccepted,
+                termsVersion: options?.termsVersion,
                 // grant_type: 'client_credentials',
                 // client_id: this.clientId,
                 // client_secret: password,
@@ -177,6 +179,7 @@ export class Client {
             const code = typeof e?.code === 'number' ? e.code : 500;
             const reason =
                 (typeof e?.message === 'string' && e.message) ||
+                (typeof e?.message?.message === 'string' && e.message.message) ||
                 (typeof e?.reason === 'string' && e.reason) ||
                 'login-failed';
             throw new FidjError(code, reason);

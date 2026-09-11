@@ -1,75 +1,20 @@
 # @ofidj/node
 
-> FIDJ node tools - A TypeScript library providing utilities for client authentication, session management, and more.
->
-> _Renamed from `fidj-node` at 1.0.0. The old `fidj-node` package is deprecated; install `@ofidj/node`._
+JS/TypeScript SDK for Fidj authentication, sessions, app roles and privacy. Install `@ofidj/node`; the old `fidj-node` package name is deprecated.
 
-## 📋 Description
+Start with [QUICKSTART.md](QUICKSTART.md). Modules live under `src/connection`, `src/sdk`, `src/session` and `src/tools`; shared API types come from `@ofidj/contracts`.
 
-Node.js library that provides a set of tools for FIDJ client authentication, connection management, session
-handling, and various utility functions. It's designed to simplify interactions with remote services or APIs.
+## Development
 
-## 🚀 Quick Start (5 minutes)
+Read the [workspace rules](../AGENTS.md). Follow red → green → refactor: run a new failing behavior test before implementation, make it pass, then run relevant regression checks.
 
-```bash
-npm install @ofidj/node
-```
-
-```typescript
-import {FidjNodeService} from '@ofidj/node';
-
-const fidj = new FidjNodeService();
-
-// Zero-config: connects to sandbox automatically
-await fidj.init();
-
-// Or with your app ID for production
-// await fidj.init('your-fidj-app-id', {prod: true});
-
-await fidj.login('user@example.com', 'password');
-const token = await fidj.fidjGetIdToken();
-```
-
-**Where to find your fidjId?** Log in to [fidj.ovh](https://fidj.ovh), go to your app settings, and copy the App ID.
-
-See the full [Quickstart Guide](./QUICKSTART.md) for more examples (demo mode, browser usage, API calls, troubleshooting).
-
-## 🧩 Modules
-
-The library consists of several modules:
-
-- **connection**: Provides classes and interfaces for client authentication and connection management
-- **sdk**: Software development kit for interacting with services
-- **session**: Handles user sessions
-- **tools**: Utility functions for Base64 encoding/decoding, storage operations, and XOR operations
-
-## 📚 Documentation
-
-Please read the [specifications](./specs) for detailed information about each module:
-
-- [connection](./specs/connection): Client authentication and connection management
-- [sdk](./specs/sdk): SDK for service interaction
-- [session](./specs/session): Session handling
-- [tools](./specs/tools): Utility functions
-- [scenarios](./specs/01.scenario): Usage scenarios and examples
-
-## 🧪 Testing
-
-```bash
-# Run tests
+```sh
+npm run build
 npm test
-
-# Run tests with coverage
 npm run test-coverage
 ```
 
-## 📝 History
-
-See [Changelog](./CHANGELOG.md).
-
-## 📄 License
-
-MIT
+See [CHANGELOG.md](CHANGELOG.md) for history. License: MIT. Development features require coordinated API/contracts versions; local success does not imply package publication.
 
 ## Server-side app sessions
 
@@ -102,41 +47,20 @@ Requires the coordinated 3.6.24 API and contracts changes. Passwords must contai
 
 Authenticated `PUT /me` password changes require `{currentPassword, password}`. They apply the same password limits as reset, revoke existing sessions, and invalidate outstanding reset links. Sign in again after success. Name-only updates do not change credentials.
 
-## Integrated OIDC beta
+## Beta identity helpers
 
-Use Node 22 LTS or later. `FidjOidcClient` uses `oauth4webapi` for protocol validation; the configured issuer and REST API must share an origin. Register the exact callback with the app owner console first.
+The source exports `FidjOidcClient` and tenant-verification helpers. The API ships an integrated `/oidc` provider from 3.6.26, in beta: it serves no `/oidc` routes at all unless the operator sets `FIDJ_OIDC_ISSUER` and its signing keys, so an issuer URL is something a deployment has to configure rather than something to assume. Organization routes are beta on the same release.
 
-```typescript
-import {FidjOidcClient} from '@ofidj/node';
-const identity = new FidjOidcClient({
-    issuer: 'https://api.sandbox.fidj.ovh/oidc',
-    clientId: 'YOUR_APP_ID',
-    redirectUri: window.location.origin + window.location.pathname,
-    apiEndpoint: 'https://api.sandbox.fidj.ovh/v3',
-    storage: sessionStorage,
-});
-// On the sign-in action:
-window.location.assign(await identity.beginLogin());
-// On the registered callback, before opening application content:
-await identity.completeLogin(new URL(window.location.href));
-const accessToken = await identity.accessToken();
-```
+OIDC client support includes state/nonce/signature validation and same-tab session handoff. These client capabilities do not by themselves establish conformance or hosted readiness: verify the issuer answers discovery, and validate the integration against the deployment you are targeting, before offering it to app builders.
 
-These are two lifecycle steps, not consecutive actions on one page load. Remove callback query parameters from browser history after capturing the callback. Transactions expire after ten minutes and are consumed once. The client validates issuer, state, nonce and ID-token signatures. Refresh calls are serialized within one client instance; expired/replayed sessions require login again. `logout()` revokes the app grant and clears local session storage.
+## Explicit app agreement on login
 
-The generated same-origin module and `FidjNodeService` facade recognize this same-tab session. The facade retains its historical API token-getter name for existing consumers; use `accessToken()` for new OIDC API integrations. The standalone ID token is identity evidence, not a REST bearer credential. A production backend-for-frontend with HttpOnly cookies remains a separate integration choice for confidential applications.
-
-Backend tenant authorization:
-
-```typescript
-import {verifyOrganizationSession} from '@ofidj/node';
-const access = await verifyOrganizationSession(bearerToken, {
-    appId: process.env.FIDJ_APP_ID!,
-    apiEndpoint: process.env.FIDJ_API_ENDPOINT!,
-    organizationId,
-    permission: 'projects:write',
-});
-// Scope the application database query to access.organizationId as well.
-```
-
-`verifyAppSession` now supports live opaque OIDC access tokens and validates the authoritative app/subject response. An app-wide role does not grant organization access. The integrated API tests exercise the shipped OIDC client, backend verifier and facade. Hosted issuer activation, independent conformance and stable package publication remain release gates.
+Fetch `GET /apps/:appId` and show `app.agreement.text` beside an unchecked required
+checkbox. Pass the person's choice and the displayed version to
+`login(email, password, {termsAccepted: checkbox.checked, termsVersion: agreement.version})`.
+Never set acceptance automatically. Missing/false acceptance or an outdated
+version returns HTTP 409 before the app token is issued. Password login requires
+this choice every time; an accepted unchanged version creates no duplicate audit
+entry. Renewals use the already recorded current agreement. A new version requires
+sign-in again. Optional consent remains independent. Coordinated API/SDK versions
+are required; legacy login callers must supply the new options.
