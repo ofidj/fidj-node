@@ -9,6 +9,7 @@ import {
     ClientTokens,
     ClientUser,
     Connection,
+    FidjError,
     LoggerInterface,
     LoggerLevelEnum,
     LoggerService,
@@ -308,6 +309,28 @@ describe('Connection', () => {
                 .catch((err) => {
                     fail(err.toString());
                 });
+        });
+
+        it('should preserve the API status when login fails', async () => {
+            spy.on(axios, 'post', () =>
+                Promise.reject({
+                    response: {
+                        status: 401,
+                        data: {status: 'unknown-user'},
+                    },
+                })
+            );
+
+            const client = new Client(_appId, _uri, _storage, _sdk, _logger);
+
+            try {
+                await client.login('missing@example.com', 'wrong-password');
+                assert.fail('Expected login to fail');
+            } catch (error: any) {
+                expect(error).to.be.instanceOf(FidjError);
+                expect(error.code).to.equal(401);
+                expect(error.reason).to.equal('unknown-user');
+            }
         });
 
         xit('should reAuthenticate', async () => {

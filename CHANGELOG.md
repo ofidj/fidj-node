@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.6.26] - 2026-09-12
+
+- Preserve structured API failure statuses through `FidjError`, so generated clients can explain sign-in failures instead of displaying the transport enum `STATUS`.
+
 - Forward explicit agreement choice/version in password login without automatically granting consent.
 
 Dated entries are historical; current workflow is in the package README.

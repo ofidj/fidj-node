@@ -179,6 +179,7 @@ export class Client {
             const code = typeof e?.code === 'number' ? e.code : 500;
             const reason =
                 (typeof e?.message === 'string' && e.message) ||
+                (typeof e?.message?.status === 'string' && e.message.status) ||
                 (typeof e?.message?.message === 'string' && e.message.message) ||
                 (typeof e?.reason === 'string' && e.reason) ||
                 'login-failed';
