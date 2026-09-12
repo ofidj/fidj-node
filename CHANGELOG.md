@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.6.27] - 2026-09-12
+
+- Replace duplicated raw browser user agents with short session labels such as
+  `Chrome on macOS` or `Safari on iPhone`.
+
 ## [3.6.26] - 2026-09-12
 
 - Preserve structured API failure statuses through `FidjError`, so generated clients can explain sign-in failures instead of displaying the transport enum `STATUS`.

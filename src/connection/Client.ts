@@ -6,6 +6,32 @@ import {ClientTokens} from './ClientTokens';
 import {ClientUser} from './ClientUser';
 import {ClientToken} from './ClientToken';
 
+export function readableClientInfo(userAgent: string): string {
+    const browser = /Edg\//.test(userAgent)
+        ? 'Edge'
+        : /Firefox\//.test(userAgent)
+          ? 'Firefox'
+          : /Chrome\//.test(userAgent)
+            ? 'Chrome'
+            : /Safari\//.test(userAgent)
+              ? 'Safari'
+              : 'Browser';
+    const device = /iPhone/.test(userAgent)
+        ? 'iPhone'
+        : /iPad/.test(userAgent)
+          ? 'iPad'
+          : /Android/.test(userAgent)
+            ? 'Android'
+            : /Macintosh|Mac OS X/.test(userAgent)
+              ? 'macOS'
+              : /Windows/.test(userAgent)
+                ? 'Windows'
+                : /Linux/.test(userAgent)
+                  ? 'Linux'
+                  : 'unknown device';
+    return `${browser} on ${device}`;
+}
+
 export class Client {
     // private refreshToken: string;
     private static refreshCountInitial = 1;
@@ -31,12 +57,7 @@ export class Client {
         let uuid: string = this.storage.get(this._clientUuid) || 'uuid-' + Math.random();
         let info = '_clientInfo'; // this.storage.get(this._clientInfo);
         if (typeof window !== 'undefined' && window.navigator) {
-            info =
-                window.navigator.appName +
-                '@' +
-                window.navigator.appVersion +
-                '-' +
-                window.navigator.userAgent;
+            info = readableClientInfo(window.navigator.userAgent);
         }
         if (typeof window !== 'undefined' && window['device'] && window['device'].uuid) {
             uuid = window['device'].uuid;
