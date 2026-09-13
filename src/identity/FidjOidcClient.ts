@@ -29,11 +29,18 @@ export class FidjOidcClient {
     }
     hasSession() {return !!this.options.storage.getItem(this.prefix + '.session');}
     private session() {return JSON.parse(this.options.storage.getItem(this.prefix + '.session') || 'null');}
-    async beginLogin() {
+    // No `prompt` by default: sending `login consent` asked the provider to
+    // ignore the session and the grant it is configured to keep, so every app
+    // re-collected a password a person had just typed for another one. `silent`
+    // asks for an answer without a screen (it comes back as an error when the
+    // person is not signed in); `prompt` stays available for a step-up check an
+    // app decides it needs.
+    async beginLogin(options: {silent?: boolean; prompt?: string} = {}) {
         const as = await this.discovery(), verifier = oauth.generateRandomCodeVerifier(), state = oauth.generateRandomState(), nonce = oauth.generateRandomNonce();
         this.options.storage.setItem(this.prefix + '.transaction', JSON.stringify({verifier, state, nonce, createdAt: Date.now()}));
+        const prompt = options.silent ? 'none' : options.prompt;
         const url = new URL(as.authorization_endpoint);
-        url.search = new URLSearchParams({client_id: this.options.clientId, redirect_uri: this.options.redirectUri, response_type: 'code', scope: 'openid profile email offline_access fidj:api', prompt: 'login consent', state, nonce, code_challenge: await oauth.calculatePKCECodeChallenge(verifier), code_challenge_method: 'S256'}).toString();
+        url.search = new URLSearchParams({client_id: this.options.clientId, redirect_uri: this.options.redirectUri, response_type: 'code', scope: 'openid profile email offline_access fidj:api', ...(prompt ? {prompt} : {}), state, nonce, code_challenge: await oauth.calculatePKCECodeChallenge(verifier), code_challenge_method: 'S256'}).toString();
         return url.href;
     }
     async completeLogin(callback: URL) {
@@ -41,6 +48,12 @@ export class FidjOidcClient {
         this.options.storage.removeItem(this.prefix + '.transaction');
         const expected = new URL(this.options.redirectUri);
         if (!transaction || Date.now() - transaction.createdAt > 600000 || callback.origin !== expected.origin || callback.pathname !== expected.pathname) throw new Error('Login transaction expired or callback mismatch');
+        // A silent attempt answers in the callback, not on screen. "You are not
+        // signed in" and "this app has no grant yet" are both invitations to ask
+        // again with a screen, so they must reach the caller as themselves
+        // rather than as one opaque authorization error.
+        const refusal = callback.searchParams.get('error');
+        if (refusal) throw Object.assign(new Error(callback.searchParams.get('error_description') || refusal), {code: refusal, silentRefusal: ['login_required', 'consent_required', 'interaction_required', 'account_selection_required'].includes(refusal)});
         const as = await this.discovery(), client = {client_id: this.options.clientId};
         const params = oauth.validateAuthResponse(as, client, callback, transaction.state);
         const response = await oauth.authorizationCodeGrantRequest(as, client, oauth.None(), params, this.options.redirectUri, transaction.verifier, this.network());

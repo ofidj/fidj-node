@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.6.28] - 2026-09-13
+
+- Stop sending `prompt=login consent` on every authorization request. The client
+  was asking the provider to ignore the session and the grant it keeps, so each
+  app re-collected a password the person had just typed for another one; a
+  second app now reuses the Fidj session, and an already-approved app needs no
+  second approval.
+- Add `beginLogin({silent: true})` for an answer without a screen, and surface a
+  silent refusal as `error.code` (`login_required`, `consent_required`) with
+  `error.silentRefusal`, instead of one opaque authorization error.
+- Keep `beginLogin({prompt: 'login'})` available for an app that wants a fresh
+  credential check.
+
 ## [3.6.27] - 2026-09-12
 
 - Replace duplicated raw browser user agents with short session labels such as

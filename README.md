@@ -53,6 +53,20 @@ The source exports `FidjOidcClient` and tenant-verification helpers. The API shi
 
 OIDC client support includes state/nonce/signature validation and same-tab session handoff. These client capabilities do not by themselves establish conformance or hosted readiness: verify the issuer answers discovery, and validate the integration against the deployment you are targeting, before offering it to app builders.
 
+`beginLogin()` sends no `prompt`, so a person who already has a session with the
+provider is signed in without typing anything again, and an app they have already
+approved needs no second approval. Two options change that, and both are opt-in
+while this support is beta:
+
+- `beginLogin({silent: true})` asks for an answer without a screen. When nobody is
+  signed in, the callback carries an error instead of a code; `completeLogin`
+  throws it with `error.code` set to `login_required` or `consent_required` and
+  `error.silentRefusal === true`, which is the signal to start an ordinary
+  sign-in. Run it from a person's click, never on page load: a silent request
+  made on every visit tells the provider which sites they open.
+- `beginLogin({prompt: 'login'})` forces a fresh credential check, for an app
+  that wants one before a sensitive action.
+
 ## Explicit app agreement on login
 
 Fetch `GET /apps/:appId` and show `app.agreement.text` beside an unchecked required
