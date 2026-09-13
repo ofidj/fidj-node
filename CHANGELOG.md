@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.6.29] - 2026-09-13
+
+- Never reject from `logout()`. Signing out has one desired end state and the
+  local session is always reachable, so a server that refuses the call — the
+  credential just changed, the session was already revoked — no longer turns a
+  successful password reset into "Request failed".
+
 ## [3.6.28] - 2026-09-13
 
 - Stop sending `prompt=login consent` on every authorization request. The client

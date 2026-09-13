@@ -93,6 +93,12 @@ export class FidjOidcClient {
         if (!response.ok) {if (response.status === 401) this.clear(); throw Object.assign(new Error(result?.message || 'Request failed'), {code: response.status});}
         return {status: response.status, data: result};
     }
-    async logout() {try {if (this.hasSession()) await this.request('/me/oidc/logout', 'POST', {});} finally {this.clear();}}
+    // Signing out has one desired end state and the local session is always
+    // reachable, so this never rejects. A server that refuses the call — the
+    // credential just changed, the session was already revoked, the network is
+    // gone — has not kept the person signed in, and reporting a failure over a
+    // success they already got is how a password change ends in "Request
+    // failed" on top of a password that did change.
+    async logout() {try {if (this.hasSession()) await this.request('/me/oidc/logout', 'POST', {});} catch {} finally {this.clear();}}
     clear() {this.options.storage.removeItem(this.prefix + '.session'); this.options.storage.removeItem(this.prefix + '.transaction');}
 }

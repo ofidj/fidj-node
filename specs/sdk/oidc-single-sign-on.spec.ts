@@ -88,6 +88,31 @@ describe('single sign-on across apps', () => {
     // screen. The app has to be able to tell "not signed in" from a real
     // failure, because the first one means "show the button" and the second
     // means "something is broken".
+    // Signing out has one desired end state, and the local session is always
+    // reachable. A server that refuses the call — because the credential just
+    // changed, because the session was already revoked — has not prevented the
+    // sign-out, so it must not be reported as a failure over a success the
+    // person already got.
+    it('signs out even when the server refuses the call', async () => {
+        const storage = memoryStorage();
+        const instance = new FidjOidcClient({
+            issuer,
+            clientId: 'fidj-local-studio',
+            redirectUri: 'http://127.0.0.1:8200/',
+            apiEndpoint: origin + '/v3',
+            storage,
+        });
+        // A live-looking session whose token the server will refuse: the /v3
+        // endpoint is not served by the discovery stub, so the call fails.
+        storage.setItem(
+            'fidj.oidc.fidj-local-studio.session',
+            JSON.stringify({tokens: {access_token: 'stale'}, identity: {}, expiresAt: Date.now() + 60000})
+        );
+        assert.isTrue(instance.hasSession());
+        await instance.logout();
+        assert.isFalse(instance.hasSession(), 'the local session must be gone');
+    });
+
     it('names a silent refusal so the app can fall back to the full screen', async () => {
         const instance = client();
         const url = new URL(await instance.beginLogin({silent: true}));
