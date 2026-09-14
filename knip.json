@@ -1,0 +1,6 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["src/index.ts", "specs/**/*.spec.ts", "examples/*.ts", "scripts/bp/*.cjs"],
+  "project": ["src/**/*.ts", "specs/**/*.ts", "examples/**/*.ts", "scripts/**/*.cjs"],
+  "ignoreDependencies": ["@typescript-eslint/.*", "eslint-.*", "@types/.*"]
+}
