@@ -122,7 +122,11 @@ describe('single sign-on across apps', () => {
         // endpoint is not served by the discovery stub, so the call fails.
         storage.setItem(
             'fidj.oidc.fidj-local-studio.session',
-            JSON.stringify({tokens: {access_token: 'stale'}, identity: {}, expiresAt: Date.now() + 60000})
+            JSON.stringify({
+                tokens: {access_token: 'stale'},
+                identity: {},
+                expiresAt: Date.now() + 60000,
+            })
         );
         assert.isTrue(instance.hasSession());
         try {
@@ -210,7 +214,10 @@ describe('single sign-on across apps', () => {
             const url = new URL((await instance.logout({endProviderSession: true})) as string);
             assert.equal(url.origin + url.pathname, origin + '/oidc/session/end');
             assert.equal(url.searchParams.get('id_token_hint'), 'header.payload.signature');
-            assert.equal(url.searchParams.get('post_logout_redirect_uri'), 'http://127.0.0.1:8200/');
+            assert.equal(
+                url.searchParams.get('post_logout_redirect_uri'),
+                'http://127.0.0.1:8200/'
+            );
             assert.equal(url.searchParams.get('client_id'), 'fidj-local-studio');
             assert.isFalse(instance.hasSession(), 'the local session must be gone either way');
         });
@@ -225,7 +232,7 @@ describe('single sign-on across apps', () => {
 
         // The two sign-outs an app can mean are two calls on the facade, because
         // the console is the only caller that is Fidj itself.
-        it('separates an app sign-out from Fidj\'s own on the facade', async () => {
+        it("separates an app sign-out from Fidj's own on the facade", async () => {
             signOutStatus = 503;
             const app = new FidjNodeService();
             (app as any).oidcClient = signedIn().instance;

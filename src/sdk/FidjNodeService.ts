@@ -284,19 +284,34 @@ export class FidjNodeService implements IService {
 
     private oidcClient: FidjOidcClient;
     private oidc() {
-        if (this.oidcClient) return this.oidcClient;
-        if (typeof sessionStorage === 'undefined' || !this.connection.fidjId) return undefined;
+        if (this.oidcClient) {
+            return this.oidcClient;
+        }
+        if (typeof sessionStorage === 'undefined' || !this.connection.fidjId) {
+            return undefined;
+        }
         const saved = sessionStorage.getItem('fidj.oidc.' + this.connection.fidjId + '.config');
-        if (!saved) return undefined;
+        if (!saved) {
+            return undefined;
+        }
         const options = JSON.parse(saved);
-        const expectedApi = this.connection.apiEndpoint || (this.sdk.prod ? 'https://api.fidj.ovh/v3' : 'https://api.sandbox.fidj.ovh/v3');
-        if (options.apiEndpoint.replace(/\/$/, '') !== expectedApi.replace(/\/$/, '') || options.clientId !== this.connection.fidjId) return undefined;
+        const expectedApi =
+            this.connection.apiEndpoint ||
+            (this.sdk.prod ? 'https://api.fidj.ovh/v3' : 'https://api.sandbox.fidj.ovh/v3');
+        if (
+            options.apiEndpoint.replace(/\/$/, '') !== expectedApi.replace(/\/$/, '') ||
+            options.clientId !== this.connection.fidjId
+        ) {
+            return undefined;
+        }
         this.oidcClient = new FidjOidcClient({...options, storage: sessionStorage});
         return this.oidcClient;
     }
 
     public isLoggedIn(): boolean {
-        if (this.oidc()) return this.oidc().hasSession();
+        if (this.oidc()) {
+            return this.oidc().hasSession();
+        }
         return this.connection.isLogin();
     }
 
@@ -352,7 +367,9 @@ export class FidjNodeService implements IService {
             return JSON.parse(await this.connection.getIdPayload({roles: []})).roles || [];
         }
         const endpoints = await this.connection.getApiEndpoints({filter: 'theBestOne'});
-        if (endpoints.length !== 1) throw new FidjError(503, 'No identity endpoint is available.');
+        if (endpoints.length !== 1) {
+            throw new FidjError(503, 'No identity endpoint is available.');
+        }
         const session = await verifyAppSession(await this.fidjGetIdToken(), {
             appId: this.connection.fidjId,
             apiEndpoint: endpoints[0].url,
@@ -369,12 +386,16 @@ export class FidjNodeService implements IService {
     // screen asks instead of walking the person back in. It answers with where
     // the provider finishes that, for a caller that can leave the page.
     public async logoutFromFidj(): Promise<string | void | ErrorInterface> {
-        if (this.oidc()) return this.oidc().logout({endProviderSession: true});
+        if (this.oidc()) {
+            return this.oidc().logout({endProviderSession: true});
+        }
         return this.logout(true);
     }
 
     public async logout(force?: boolean): Promise<void | ErrorInterface> {
-        if (this.oidc()) return void (await this.oidc().logout());
+        if (this.oidc()) {
+            return void (await this.oidc().logout());
+        }
         if (!this.connection.getClient() && !force) {
             return this._removeAll().then(() => {
                 return this.session.create(this.connection.fidjId, true);
@@ -401,7 +422,10 @@ export class FidjNodeService implements IService {
             fnInitFirstData_Arg?: any;
         } = {forceRefresh: false}
     ): Promise<void | ErrorInterface> {
-        if (this.oidc()) {await this.oidc().request('/me'); return;}
+        if (this.oidc()) {
+            await this.oidc().request('/me');
+            return;
+        }
         this.logger.log('fidj.sdk.service.sync');
         this.logger.log('fidj.sdk.service.sync: you ar not using DB - no sync available.');
 
@@ -583,8 +607,14 @@ export class FidjNodeService implements IService {
         input: EndpointCallInterface<TData>
     ): Promise<{status: number; data?: TResponse}> {
         if (this.oidc()) {
-            const base = input.defaultKeyUrl ? new URL(input.defaultKeyUrl).pathname.replace(/^\/v3/, '') : '/' + (input.key || 'me');
-            return this.oidc().request(base + (input.relativePath ? '/' + input.relativePath : ''), input.verb, input.data);
+            const base = input.defaultKeyUrl
+                ? new URL(input.defaultKeyUrl).pathname.replace(/^\/v3/, '')
+                : '/' + (input.key || 'me');
+            return this.oidc().request(
+                base + (input.relativePath ? '/' + input.relativePath : ''),
+                input.verb,
+                input.data
+            );
         }
         await this.sync();
 
@@ -597,7 +627,10 @@ export class FidjNodeService implements IService {
         let firstEndpointUrl =
             !endpoints || endpoints.length !== 1 ? input.defaultKeyUrl : endpoints[0].url;
         if (input.relativePath) {
-            firstEndpointUrl = new URL(input.relativePath.replace(/^\/+/, ''), firstEndpointUrl.replace(/\/?$/, '/')).href;
+            firstEndpointUrl = new URL(
+                input.relativePath.replace(/^\/+/, ''),
+                firstEndpointUrl.replace(/\/?$/, '/')
+            ).href;
         }
         const jwt = await this.connection.getIdToken();
         let answer: {status: number; data?: TResponse};
@@ -734,8 +767,9 @@ export class FidjNodeService implements IService {
 
     private async accountPost(path: string, data: unknown): Promise<void> {
         const endpoints = await this.connection.getApiEndpoints({filter: 'theBestOne'});
-        if (!endpoints || endpoints.length !== 1)
+        if (!endpoints || endpoints.length !== 1) {
             throw new FidjError(400, 'No configured account API endpoint.');
+        }
         await new Ajax().post({
             url: endpoints[0].url.replace(/\/$/, '') + path,
             headers: {'Content-Type': 'application/json', Accept: 'application/json'},
@@ -745,7 +779,9 @@ export class FidjNodeService implements IService {
     }
 
     public async fidjGetIdToken() {
-        if (this.oidc()) return this.oidc().accessToken();
+        if (this.oidc()) {
+            return this.oidc().accessToken();
+        }
         return this.connection.getIdToken();
     }
 

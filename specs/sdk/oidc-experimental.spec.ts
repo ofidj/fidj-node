@@ -54,11 +54,15 @@ describe('beta OIDC support', () => {
             path.join(__dirname, '../../../generator-fidj/README.md'),
         ];
         for (const file of files) {
-            if (!fs.existsSync(file)) continue;
+            if (!fs.existsSync(file)) {
+                continue;
+            }
             const text = fs.readFileSync(file, 'utf8');
             const lines = text.split('\n');
             for (const [index, line] of lines.entries()) {
-                if (!/oidc/i.test(line)) continue;
+                if (!/oidc/i.test(line)) {
+                    continue;
+                }
                 const around = lines.slice(Math.max(0, index - 6), index + 7).join('\n');
                 assert.match(
                     around,

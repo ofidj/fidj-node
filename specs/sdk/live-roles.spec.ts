@@ -17,7 +17,9 @@ describe('Live SDK roles', function () {
             if (revoked) {
                 res.writeHead(403);
                 res.end('{}');
-            } else res.end(JSON.stringify({roles: roles.map((type) => ({type}))}));
+            } else {
+                res.end(JSON.stringify({roles: roles.map((type) => ({type}))}));
+            }
         });
         await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
         const sdk = new FidjNodeService();
