@@ -1,5 +1,23 @@
 # Changelog
 
+## [3.6.30] - 2026-09-14
+
+- Let a sign-out end the session the provider recognises the browser by.
+  `logout()` cleared the local session and revoked the app's tokens, and that
+  was all: the provider still knew the browser, so Fidj's own sign-in screen was
+  answered with an authorization code and no screen at all, and a page reload
+  put the person straight back into the console they had just left.
+  `logout({endProviderSession: true})` asks the API to end it, and answers with
+  the provider's `end_session_endpoint` — `id_token_hint` and a return address —
+  when that call could not confirm it, so the sign-out can still be finished.
+  An app's plain `logout()` is unchanged and still keeps single sign-on.
+- Add `signedOutHere()`. Ending the provider session can be refused, so the fact
+  that somebody asked to be signed out outlives the call: a sign-in screen reads
+  it to know it has to ask rather than assume. Signing in again forgets it.
+- Add `FidjNodeService.logoutFromFidj()`, the facade's name for the same
+  distinction: an app's sign-out ends that app's access, Fidj's own ends the
+  identity session every app is recognised through.
+
 ## [3.6.29] - 2026-09-13
 
 - Never reject from `logout()`. Signing out has one desired end state and the

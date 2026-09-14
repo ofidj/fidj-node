@@ -2,6 +2,7 @@ import {assert} from 'chai';
 import * as http from 'http';
 import {AddressInfo} from 'net';
 import {FidjOidcClient} from '../../src/identity/FidjOidcClient';
+import {FidjNodeService} from '../../src/sdk/FidjNodeService';
 
 const memoryStorage = () => {
     const store = new Map<string, string>();
@@ -22,22 +23,36 @@ describe('single sign-on across apps', () => {
     let server: http.Server;
     let issuer: string;
     let origin: string;
+    // What the API answers the sign-out call with, and what it was told.
+    let signOutStatus = 204;
+    let signOutAsked: any;
 
     before(async () => {
         server = http.createServer((req, res) => {
-            if (!req.url?.endsWith('/.well-known/openid-configuration')) {
-                res.writeHead(404).end();
+            if (req.url?.endsWith('/.well-known/openid-configuration')) {
+                res.writeHead(200, {'content-type': 'application/json'});
+                res.end(
+                    JSON.stringify({
+                        issuer,
+                        authorization_endpoint: origin + '/oidc/auth',
+                        token_endpoint: origin + '/oidc/token',
+                        end_session_endpoint: origin + '/oidc/session/end',
+                        jwks_uri: origin + '/oidc/jwks',
+                    })
+                );
                 return;
             }
-            res.writeHead(200, {'content-type': 'application/json'});
-            res.end(
-                JSON.stringify({
-                    issuer,
-                    authorization_endpoint: origin + '/oidc/auth',
-                    token_endpoint: origin + '/oidc/token',
-                    jwks_uri: origin + '/oidc/jwks',
-                })
-            );
+            if (req.method === 'POST' && req.url === '/v3/me/oidc/logout') {
+                let raw = '';
+                req.on('data', (chunk) => (raw += chunk));
+                req.on('end', () => {
+                    signOutAsked = raw ? JSON.parse(raw) : null;
+                    res.writeHead(signOutStatus, {'content-type': 'application/json'});
+                    res.end(signOutStatus === 204 ? undefined : '{}');
+                });
+                return;
+            }
+            res.writeHead(404).end();
         });
         await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
         origin = 'http://127.0.0.1:' + (server.address() as AddressInfo).port;
@@ -94,6 +109,7 @@ describe('single sign-on across apps', () => {
     // sign-out, so it must not be reported as a failure over a success the
     // person already got.
     it('signs out even when the server refuses the call', async () => {
+        signOutStatus = 503;
         const storage = memoryStorage();
         const instance = new FidjOidcClient({
             issuer,
@@ -109,7 +125,11 @@ describe('single sign-on across apps', () => {
             JSON.stringify({tokens: {access_token: 'stale'}, identity: {}, expiresAt: Date.now() + 60000})
         );
         assert.isTrue(instance.hasSession());
-        await instance.logout();
+        try {
+            await instance.logout();
+        } finally {
+            signOutStatus = 204;
+        }
         assert.isFalse(instance.hasSession(), 'the local session must be gone');
     });
 
@@ -127,5 +147,96 @@ describe('single sign-on across apps', () => {
             assert.equal(error.code, 'login_required');
             assert.isTrue(error.silentRefusal, 'the app must be able to retry interactively');
         }
+    });
+
+    // Signing out of an app is not signing out of Fidj. The provider session is
+    // what makes the next app recognise the person, so an app ending it would
+    // sign them out of every other one. Fidj's own sign-out is the opposite
+    // case: leaving that session alive is what walks the person straight back in
+    // on the next render, which is exactly the bug this covers.
+    describe('ending the provider session', () => {
+        const signedIn = () => {
+            const storage = memoryStorage();
+            const instance = new FidjOidcClient({
+                issuer,
+                clientId: 'fidj-local-studio',
+                redirectUri: 'http://127.0.0.1:8200/',
+                apiEndpoint: origin + '/v3',
+                storage,
+            });
+            storage.setItem(
+                'fidj.oidc.fidj-local-studio.session',
+                JSON.stringify({
+                    tokens: {access_token: 'stale', id_token: 'header.payload.signature'},
+                    identity: {},
+                    expiresAt: Date.now() + 60000,
+                })
+            );
+            return {instance, storage};
+        };
+
+        beforeEach(() => {
+            signOutStatus = 204;
+            signOutAsked = undefined;
+        });
+
+        it('leaves the provider session alone when an app signs out', async () => {
+            const {instance} = signedIn();
+            assert.isUndefined(
+                await instance.logout(),
+                'an app sign-out must keep single sign-on for the other apps'
+            );
+            assert.deepEqual(signOutAsked, {endProviderSession: false});
+            assert.isFalse(instance.hasSession());
+            assert.isFalse(instance.signedOutHere());
+        });
+
+        it('asks the API to end the provider session when Fidj itself signs out', async () => {
+            const {instance} = signedIn();
+            assert.isUndefined(
+                await instance.logout({endProviderSession: true}),
+                'a confirmed sign-out is finished; there is nowhere left to send anybody'
+            );
+            assert.deepEqual(signOutAsked, {endProviderSession: true});
+            assert.isFalse(instance.hasSession());
+        });
+
+        // The call can be refused — the sign-out watched in production answered
+        // 503, silently — and the provider would then still recognise the
+        // browser. RP-initiated logout is how the person finishes it themselves.
+        it('hands back the provider sign-out to finish when the API cannot confirm it', async () => {
+            signOutStatus = 503;
+            const {instance} = signedIn();
+            const url = new URL((await instance.logout({endProviderSession: true})) as string);
+            assert.equal(url.origin + url.pathname, origin + '/oidc/session/end');
+            assert.equal(url.searchParams.get('id_token_hint'), 'header.payload.signature');
+            assert.equal(url.searchParams.get('post_logout_redirect_uri'), 'http://127.0.0.1:8200/');
+            assert.equal(url.searchParams.get('client_id'), 'fidj-local-studio');
+            assert.isFalse(instance.hasSession(), 'the local session must be gone either way');
+        });
+
+        // Whether or not the provider was reached, the screen the person lands on
+        // cannot assume Fidj has forgotten them. It has to be able to ask.
+        it('remembers that this browser asked to be signed out', async () => {
+            const {instance} = signedIn();
+            await instance.logout({endProviderSession: true});
+            assert.isTrue(instance.signedOutHere());
+        });
+
+        // The two sign-outs an app can mean are two calls on the facade, because
+        // the console is the only caller that is Fidj itself.
+        it('separates an app sign-out from Fidj\'s own on the facade', async () => {
+            signOutStatus = 503;
+            const app = new FidjNodeService();
+            (app as any).oidcClient = signedIn().instance;
+            assert.isUndefined(await app.logout(), 'an app sign-out keeps single sign-on');
+
+            const fidj = new FidjNodeService();
+            const console_ = signedIn().instance;
+            (fidj as any).oidcClient = console_;
+            const url = new URL((await fidj.logoutFromFidj()) as string);
+            assert.equal(url.origin + url.pathname, origin + '/oidc/session/end');
+            assert.isTrue(console_.signedOutHere());
+        });
     });
 });

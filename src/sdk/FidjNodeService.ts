@@ -364,8 +364,17 @@ export class FidjNodeService implements IService {
         return JSON.parse(await this.connection.getIdPayload({message: ''})).message;
     }
 
+    // Signing out of Fidj itself, which an app's sign-out deliberately is not:
+    // it ends the identity session this browser is recognised by, so the next
+    // screen asks instead of walking the person back in. It answers with where
+    // the provider finishes that, for a caller that can leave the page.
+    public async logoutFromFidj(): Promise<string | void | ErrorInterface> {
+        if (this.oidc()) return this.oidc().logout({endProviderSession: true});
+        return this.logout(true);
+    }
+
     public async logout(force?: boolean): Promise<void | ErrorInterface> {
-        if (this.oidc()) return this.oidc().logout();
+        if (this.oidc()) return void (await this.oidc().logout());
         if (!this.connection.getClient() && !force) {
             return this._removeAll().then(() => {
                 return this.session.create(this.connection.fidjId, true);

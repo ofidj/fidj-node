@@ -24,10 +24,17 @@ export class FidjOidcClient {
     private async discovery() {
         if (!this.metadata) {const issuer = new URL(this.options.issuer); this.metadata = await this.discover(issuer);
             for (const endpoint of ['authorization_endpoint', 'token_endpoint', 'jwks_uri']) if (new URL(String(this.metadata[endpoint])).origin !== issuer.origin) throw new Error('Unexpected identity endpoint origin');
+            if (this.metadata.end_session_endpoint && new URL(String(this.metadata.end_session_endpoint)).origin !== issuer.origin) throw new Error('Unexpected identity endpoint origin');
         }
         return this.metadata;
     }
     hasSession() {return !!this.options.storage.getItem(this.prefix + '.session');}
+    // Somebody who signed out of Fidj itself must not be recognised again on the
+    // next render. Ending the provider session is what makes that true, and that
+    // call can be refused — the sign-out watched in production answered 503 — so
+    // the fact they asked outlives it. A sign-in screen reads this to know it has
+    // to ask rather than assume, and signing in again is what forgets it.
+    signedOutHere(): boolean {return this.options.storage.getItem(this.prefix + '.signedOut') === 'true';}
     private session() {return JSON.parse(this.options.storage.getItem(this.prefix + '.session') || 'null');}
     // No `prompt` by default: sending `login consent` asked the provider to
     // ignore the session and the grant it is configured to keep, so every app
@@ -65,7 +72,7 @@ export class FidjOidcClient {
         storage.setItem(this.prefix + '.config', JSON.stringify(publicOptions));
         return identity;
     }
-    private save(tokens: any, identity: any) {this.options.storage.setItem(this.prefix + '.session', JSON.stringify({tokens, identity, expiresAt: Date.now() + Number(tokens.expires_in || 300) * 1000}));}
+    private save(tokens: any, identity: any) {this.options.storage.removeItem(this.prefix + '.signedOut'); this.options.storage.setItem(this.prefix + '.session', JSON.stringify({tokens, identity, expiresAt: Date.now() + Number(tokens.expires_in || 300) * 1000}));}
     async accessToken() {
         const session = this.session();
         if (!session) throw Object.assign(new Error('Sign in first'), {code: 401});
@@ -93,12 +100,34 @@ export class FidjOidcClient {
         if (!response.ok) {if (response.status === 401) this.clear(); throw Object.assign(new Error(result?.message || 'Request failed'), {code: response.status});}
         return {status: response.status, data: result};
     }
+    // Where the provider ends the session it recognises this browser by, for a
+    // caller that can leave the page. Nothing here ends anything on its own: the
+    // hint and the return address are what let the provider finish without
+    // asking the person which account they meant.
+    private async endSessionUrl(): Promise<string | undefined> {
+        const session = this.session(), endpoint = (await this.discovery()).end_session_endpoint;
+        if (!endpoint || !session?.tokens?.id_token) return undefined;
+        const url = new URL(String(endpoint));
+        url.search = new URLSearchParams({client_id: this.options.clientId, id_token_hint: session.tokens.id_token, post_logout_redirect_uri: this.options.redirectUri}).toString();
+        return url.href;
+    }
     // Signing out has one desired end state and the local session is always
     // reachable, so this never rejects. A server that refuses the call — the
     // credential just changed, the session was already revoked, the network is
     // gone — has not kept the person signed in, and reporting a failure over a
     // success they already got is how a password change ends in "Request
     // failed" on top of a password that did change.
-    async logout() {try {if (this.hasSession()) await this.request('/me/oidc/logout', 'POST', {});} catch {} finally {this.clear();}}
+    // An app's sign-out ends that app's access and nothing else: the provider
+    // session is what the person's other apps recognise them by, and ending it
+    // from one of them signs them out of all of them. `endProviderSession` is
+    // Fidj's own sign-out, which means the opposite — and returns where to finish
+    // it, because only the caller can leave the page.
+    async logout(options: {endProviderSession?: boolean} = {}): Promise<string | undefined> {
+        const endSession = options.endProviderSession ? await this.endSessionUrl().catch(() => undefined) : undefined;
+        let confirmed = false;
+        try {if (this.hasSession()) await this.request('/me/oidc/logout', 'POST', {endProviderSession: !!options.endProviderSession}); confirmed = true;} catch {} finally {this.clear();}
+        if (options.endProviderSession) this.options.storage.setItem(this.prefix + '.signedOut', 'true');
+        return confirmed ? undefined : endSession;
+    }
     clear() {this.options.storage.removeItem(this.prefix + '.session'); this.options.storage.removeItem(this.prefix + '.transaction');}
 }
