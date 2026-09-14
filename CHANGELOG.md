@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.7.3] - 2026-09-14
+
+- Release on the shared @ofidj version. The SDK version is what a generated app
+  shows as `fidj@<version>`, so it answers the same question as `/v3/status`.
+- Fail the suite when `bpInfo` — the version the SDK announces to every app it
+  runs in — no longer matches `package.json`; `npm run version:sync` restores it.
+- Name `@ofidj/contracts` 3.7.3, the version this release ships against.
+
 ## [3.6.30] - 2026-09-14
 
 - Let a sign-out end the session the provider recognises the browser by.
