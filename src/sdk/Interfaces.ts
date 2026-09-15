@@ -24,6 +24,12 @@ export interface EndpointCallInterface<TData = any> {
     defaultKeyUrl?: string;
 
     timeout?: number;
+
+    // Carry cookies on this call. Off unless asked for: the only thing that
+    // needs it is the call that turns a credential sign-in into the session the
+    // provider recognises the browser by, and a cross-origin response's
+    // Set-Cookie is dropped without it.
+    withCredentials?: boolean;
 }
 
 /**

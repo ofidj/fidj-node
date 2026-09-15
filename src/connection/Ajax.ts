@@ -139,6 +139,12 @@ export class Ajax {
         if (args.timeout) {
             options['timeout'] = args.timeout;
         }
+        // Opt-in, never the default: a cross-origin call that carries cookies is
+        // how a session cookie the API sets is kept, and every other call has no
+        // business sending one.
+        if (args.withCredentials) {
+            options['withCredentials'] = true;
+        }
 
         let res: any;
         try {
@@ -167,6 +173,12 @@ export class Ajax {
         if (args.timeout) {
             options['timeout'] = args.timeout;
         }
+        // Opt-in, never the default: a cross-origin call that carries cookies is
+        // how a session cookie the API sets is kept, and every other call has no
+        // business sending one.
+        if (args.withCredentials) {
+            options['withCredentials'] = true;
+        }
 
         let res: any;
         try {
@@ -193,6 +205,9 @@ export class Ajax {
         const options = {headers: opt.headers, data: opt.data};
         if (args.timeout) {
             options['timeout'] = args.timeout;
+        }
+        if (args.withCredentials) {
+            options['withCredentials'] = true;
         }
 
         let res: any;
@@ -222,6 +237,12 @@ export class Ajax {
         const options = {headers: opt.headers};
         if (args.timeout) {
             options['timeout'] = args.timeout;
+        }
+        // Opt-in, never the default: a cross-origin call that carries cookies is
+        // how a session cookie the API sets is kept, and every other call has no
+        // business sending one.
+        if (args.withCredentials) {
+            options['withCredentials'] = true;
         }
 
         let res: any;

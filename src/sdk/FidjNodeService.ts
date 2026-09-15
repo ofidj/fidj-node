@@ -657,7 +657,7 @@ export class FidjNodeService implements IService {
             case 'POST':
                 answer = await query.post({
                     url: firstEndpointUrl,
-                    // not used : withCredentials: true,
+                    withCredentials: input.withCredentials,
                     headers: {
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
@@ -670,7 +670,7 @@ export class FidjNodeService implements IService {
             case 'PUT':
                 answer = await query.put({
                     url: firstEndpointUrl,
-                    // not used : withCredentials: true,
+                    withCredentials: input.withCredentials,
                     headers: {
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
@@ -683,7 +683,7 @@ export class FidjNodeService implements IService {
             case 'DELETE':
                 answer = await query.delete({
                     url: firstEndpointUrl,
-                    // not used : withCredentials: true,
+                    withCredentials: input.withCredentials,
                     headers: {
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
@@ -696,7 +696,7 @@ export class FidjNodeService implements IService {
             default:
                 answer = await query.get({
                     url: firstEndpointUrl,
-                    // not used : withCredentials: true,
+                    withCredentials: input.withCredentials,
                     headers: {
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
