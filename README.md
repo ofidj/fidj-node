@@ -69,9 +69,17 @@ while this support is beta:
 
 ## Explicit app agreement on login
 
-Fetch `GET /apps/:appId` and show `app.agreement.text` beside an unchecked required
-checkbox. Pass the person's choice and the displayed version to
-`login(email, password, {termsAccepted: checkbox.checked, termsVersion: agreement.version})`.
+Call `login(email, password)` first. When the account owes this app its
+agreement, the call fails with HTTP 409 `agreement_required` and the answer
+carries `agreement: {version, text}` — show that on a screen of its own, with an
+unchecked required box and a read-only submit, then call
+`login(email, password, {termsAccepted: true, termsVersion: agreement.version})`.
+`GET /apps/:appId` returns the same agreement for a page that wants to render it
+before asking. Do not put the checkbox beside the password: the 409 is what says
+whether the question is owed at all, and an owner publishing a new version is
+what makes it owed again.
+[The workspace README](../README.md#entry-one-flow-the-same-everywhere) gives
+the whole flow, including the verification wait on the account-creation path.
 Never set acceptance automatically. Missing/false acceptance or an outdated
 version returns HTTP 409 before the app token is issued. Password login requires
 this choice every time; an accepted unchanged version creates no duplicate audit
