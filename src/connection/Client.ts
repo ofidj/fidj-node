@@ -290,8 +290,12 @@ export class Client {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
                     Authorization: 'Bearer ' + refreshToken,
-                    timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
                 },
+                // Beside the headers, never inside them: a request header named
+                // `timeout` is not on the API's allowlist, so the browser's
+                // preflight refused the whole call and signing out never
+                // reached the server.
+                timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
             })
         ).data;
     }
