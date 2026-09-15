@@ -3,7 +3,11 @@ import {ErrorInterface} from './Interfaces';
 export class FidjError implements ErrorInterface {
     constructor(
         public code: number,
-        public reason: string
+        public reason: string,
+        // What the API actually answered, when it answered something. A refusal
+        // that names the agreement it wants is only useful if the agreement
+        // survives the trip to the caller.
+        public details?: unknown
     ) {}
 
     equals(err: FidjError) {

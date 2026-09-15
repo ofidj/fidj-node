@@ -34,6 +34,27 @@ import {
 
 // TODO const PouchDB = window['PouchDB'] || require('pouchdb').default;
 
+function refusalReason(err: any): string {
+    const body = err?.message;
+    if (typeof body === 'string' && body) {
+        return body;
+    }
+    if (body && typeof body === 'object') {
+        for (const field of ['status', 'reason', 'code', 'message']) {
+            const value = body[field];
+            if (typeof value === 'string' && value) {
+                return value;
+            }
+        }
+        try {
+            return JSON.stringify(body);
+        } catch {
+            // Not serialisable; fall through to the error's own words.
+        }
+    }
+    return err?.toString ? err.toString() : String(err);
+}
+
 export class FidjNodeService implements IService {
     public static DEFAULT_TIMEOUT_MS = 60000;
     public static SANDBOX_FIDJ_ID = 'fidj-sandbox-0123fe7ed0000001';
@@ -204,7 +225,17 @@ export class FidjNodeService implements IService {
                 throw err;
             }
             const code = typeof err?.code === 'number' ? err.code : 500;
-            throw new FidjError(code, err?.toString ? err.toString() : String(err));
+            // Ajax puts the API's response body in `message`. Keep it whole:
+            // rebuilding a FidjError from `err.toString()` turned every refusal
+            // that carried a body into "[object Object]", which cost the caller
+            // the agreement it was being asked for and broke every message
+            // keyed on the reason.
+            const body = err?.message;
+            throw new FidjError(
+                code,
+                refusalReason(err),
+                body && typeof body === 'object' ? body : undefined
+            );
         }
 
         if (!this.sdk.useDB) {
