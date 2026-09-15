@@ -303,6 +303,8 @@ export class FidjOidcClient {
             }
             confirmed = true;
         } catch {
+            // Nothing to do: `confirmed` stays false, which is how a refused
+            // call is reported. The local session is cleared either way.
         } finally {
             this.clear();
         }

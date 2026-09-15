@@ -192,6 +192,7 @@ export class FidjNodeService implements IService {
         if (!this.connection.isReady()) {
             throw new FidjError(404, 'Need an initialized FidjService');
         }
+        this.forgetProviderSession();
 
         try {
             await this._removeAll();
@@ -283,6 +284,23 @@ export class FidjNodeService implements IService {
     }
 
     private oidcClient: FidjOidcClient;
+    // Typing a credential says this session is not the provider's. The Fidj door
+    // leaves `fidj.oidc.<appId>.config` behind, `clear()` keeps it when the
+    // provider session dies, and `oidc()` reads only that config — so the tab
+    // stayed in provider mode for good. A sign-in then minted its three tokens
+    // and never used them, because every call starts with `if (this.oidc())` and
+    // found no session behind it: watched on fidj.ovh as "Sign in first" over a
+    // network trace that was green from end to end.
+    private forgetProviderSession() {
+        const client = this.oidc();
+        if (!client) {
+            return;
+        }
+        client.clear();
+        this.oidcClient = undefined;
+        sessionStorage.removeItem('fidj.oidc.' + this.connection.fidjId + '.config');
+    }
+
     private oidc() {
         if (this.oidcClient) {
             return this.oidcClient;
