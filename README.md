@@ -80,7 +80,15 @@ whether the question is owed at all, and an owner publishing a new version is
 what makes it owed again.
 [The workspace README](../README.md#entry-one-flow-the-same-everywhere) gives
 the whole flow, including the verification wait on the account-creation path.
-Never set acceptance automatically. Missing/false acceptance or an outdated
+Never set acceptance automatically.
+
+**Creating an account does not sign anybody in.** `login` reads the status of
+`POST /v3/users`: 201 means the account was created by this very call, so it
+stops there and rejects with reason `verification-required` and the address in
+`details`, having asked for no token. 202 means the account was already there
+and the password matched, which signs in as before. Nothing else distinguishes
+the two, and no policy is consulted, so no existing account is affected. The API
+then refuses every app token until the address is verified. Missing/false acceptance or an outdated
 version returns HTTP 409 before the app token is issued. Password login requires
 this choice every time; an accepted unchanged version creates no duplicate audit
 entry. Renewals use the already recorded current agreement. A new version requires

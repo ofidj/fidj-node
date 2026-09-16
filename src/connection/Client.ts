@@ -128,14 +128,22 @@ export class Client {
                 dataLogin.autoSignup = false;
             }
 
-            const createdUser: ClientUser = (
-                (await new Ajax().post({
-                    url: urlLogin,
-                    data: dataLogin,
-                    headers: {'Content-Type': 'application/json', Accept: 'application/json'},
-                    timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
-                })) as any
-            ).data.user;
+            const account = (await new Ajax().post({
+                url: urlLogin,
+                data: dataLogin,
+                headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+                timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
+            })) as any;
+            // Creating an account never signs anybody in: the account exists, the
+            // verification link is on its way, and the session waits for it to be
+            // opened. 201 is the API saying it created this account just now; 202
+            // is an account that was already there and whose password matched. So
+            // no policy is needed and no existing account is affected — verified
+            // or not, none of them is being created here.
+            if (account?.status === 201) {
+                throw new FidjError(403, 'verification-required', {email: login});
+            }
+            const createdUser: ClientUser = account.data.user;
 
             this.setClientId(login); // login or createdUser.id or createdUser._id
             const urlToken = this.URI + '/apps/' + this.appId + '/tokens';
@@ -196,6 +204,12 @@ export class Client {
             return new ClientTokens(login, createdAccessToken, createdIdToken, createdRefreshToken);
         } catch (e: any) {
             this.logger.warn('Login impossible', e);
+            // A refusal raised here already says what it means. Rebuilding it
+            // would cost its details — which is how the agreement carried by a
+            // 409 was lost before any caller could see it.
+            if (e instanceof FidjError) {
+                throw e;
+            }
             // Rethrow with the HTTP status from Ajax/XhrErrorInterface so callers can react (401 vs 400 vs network).
             const code = typeof e?.code === 'number' ? e.code : 500;
             const reason =
@@ -204,7 +218,13 @@ export class Client {
                 (typeof e?.message?.message === 'string' && e.message.message) ||
                 (typeof e?.reason === 'string' && e.reason) ||
                 'login-failed';
-            throw new FidjError(code, reason);
+            // The API's own answer, kept whole. Ajax puts it in `message`.
+            const body = e?.message;
+            throw new FidjError(
+                code,
+                reason,
+                body && typeof body === 'object' ? body : undefined
+            );
         }
     }
 

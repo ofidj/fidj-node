@@ -26,12 +26,15 @@ describe('SDK explicit agreement', () => {
         spy.on(axios, 'post', async (url, body) => {
             body = typeof body === 'string' ? JSON.parse(body) : body;
             calls.push({url, body: JSON.parse(JSON.stringify(body))});
-            return {
-                status: 201,
-                data: url.endsWith('/users')
-                    ? {user: {id: 'user-a'}}
-                    : {token: {id: 'token', type: body.grant_type, data: 'token-data'}},
-            };
+            // 202: this person already has an account and is signing in to it.
+            // 201 would mean the account was created by this very call, which
+            // never signs anybody in — there would be no token call to assert on.
+            return url.endsWith('/users')
+                ? {status: 202, data: {user: {id: 'user-a'}}}
+                : {
+                      status: 201,
+                      data: {token: {id: 'token', type: body.grant_type, data: 'token-data'}},
+                  };
         });
         const storage: any = {get: () => undefined, set: () => undefined};
         const logger: any = {log: () => {}, warn: () => {}, info: () => {}};
