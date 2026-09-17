@@ -220,11 +220,7 @@ export class Client {
                 'login-failed';
             // The API's own answer, kept whole. Ajax puts it in `message`.
             const body = e?.message;
-            throw new FidjError(
-                code,
-                reason,
-                body && typeof body === 'object' ? body : undefined
-            );
+            throw new FidjError(code, reason, body && typeof body === 'object' ? body : undefined);
         }
     }
 

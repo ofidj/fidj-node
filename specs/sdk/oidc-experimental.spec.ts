@@ -33,6 +33,24 @@ describe('beta OIDC support', () => {
         );
     });
 
+    it('accepts an HTTP .localhost callback for isolated local browser origins', () => {
+        assert.doesNotThrow(
+            () =>
+                new FidjOidcClient({
+                    ...options,
+                    redirectUri: 'http://mlefree.localhost:8201/',
+                })
+        );
+        assert.throws(
+            () =>
+                new FidjOidcClient({
+                    ...options,
+                    redirectUri: 'http://mlefree.example:8201/',
+                }),
+            /trusted issuer/
+        );
+    });
+
     it('says plainly that no provider answered instead of leaking a fetch error', async () => {
         const client = new FidjOidcClient({
             ...options,

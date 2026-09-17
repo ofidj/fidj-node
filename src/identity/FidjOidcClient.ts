@@ -1,4 +1,6 @@
 import * as oauth from 'oauth4webapi';
+const localHostname = (hostname: string) =>
+    hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.localhost');
 export interface OidcOptions {
     issuer: string;
     clientId: string;
@@ -21,13 +23,11 @@ export class FidjOidcClient {
             issuer.hash ||
             issuer.username ||
             issuer.password ||
-            (issuer.protocol !== 'https:' &&
-                !['localhost', '127.0.0.1'].includes(issuer.hostname)) ||
+            (issuer.protocol !== 'https:' && !localHostname(issuer.hostname)) ||
             redirect.hash ||
             redirect.username ||
             redirect.password ||
-            (redirect.protocol !== 'https:' &&
-                !['localhost', '127.0.0.1'].includes(redirect.hostname))
+            (redirect.protocol !== 'https:' && !localHostname(redirect.hostname))
         ) {
             throw new Error(
                 'Use a trusted issuer/API origin and an exact HTTPS callback (loopback allowed for development).'
@@ -308,9 +308,10 @@ export class FidjOidcClient {
         } finally {
             this.clear();
         }
-        if (options.endProviderSession) {
-            this.options.storage.setItem(this.prefix + '.signedOut', 'true');
-        }
+        // The provider session deliberately survives an app-only sign-out, but
+        // the next visit to this app must ask which account to use. Otherwise a
+        // single click silently undoes the sign-out with the previous identity.
+        this.options.storage.setItem(this.prefix + '.signedOut', 'true');
         return confirmed ? undefined : endSession;
     }
     clear() {

@@ -192,7 +192,10 @@ describe('single sign-on across apps', () => {
             );
             assert.deepEqual(signOutAsked, {endProviderSession: false});
             assert.isFalse(instance.hasSession());
-            assert.isFalse(instance.signedOutHere());
+            assert.isTrue(
+                instance.signedOutHere(),
+                'the next sign-in here must ask which provider account to use'
+            );
         });
 
         it('asks the API to end the provider session when Fidj itself signs out', async () => {
