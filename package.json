@@ -40,7 +40,7 @@
     "test-coverage": "nyc npm run test"
   },
   "dependencies": {
-    "@ofidj/contracts": "^3.13.0",
+    "@ofidj/contracts": "^3.14.0",
     "axios": "1.20.0",
     "base-64": "^1.0.0",
     "oauth4webapi": "3.8.2"
