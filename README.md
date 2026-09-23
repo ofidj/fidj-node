@@ -6,7 +6,7 @@ Start with [QUICKSTART.md](QUICKSTART.md). Modules live under `src/connection`, 
 
 ## Development
 
-Read the [workspace rules](../AGENTS.md). Follow red → green → refactor: run a new failing behavior test before implementation, make it pass, then run relevant regression checks.
+Read the [workspace rules](../fidj-brain/AGENTS.md). Follow red → green → refactor: run a new failing behavior test before implementation, make it pass, then run relevant regression checks.
 
 ```sh
 npm run build
@@ -78,7 +78,7 @@ unchecked required box and a read-only submit, then call
 before asking. Do not put the checkbox beside the password: the 409 is what says
 whether the question is owed at all, and an owner publishing a new version is
 what makes it owed again.
-[The workspace README](../README.md#entry-one-flow-the-same-everywhere) gives
+[The workspace README](../fidj-brain/README.md#entry-one-flow-the-same-everywhere) gives
 the whole flow, including the verification wait on the account-creation path.
 Never set acceptance automatically.
 

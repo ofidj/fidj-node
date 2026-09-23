@@ -1,6 +1,6 @@
 # SDK quickstart
 
-Install `@ofidj/node` in your app. For coordinated unpublished changes, use the built workspace SDK; see the [local walkthrough](../LOCAL-DEVELOPMENT.md).
+Install `@ofidj/node` in your app. For coordinated unpublished changes, use the built workspace SDK; see the [local walkthrough](../fidj-brain/LOCAL-DEVELOPMENT.md).
 
 ```sh
 npm install @ofidj/node
@@ -72,4 +72,4 @@ Owner details require owner authorization. Client role checks only control UI; u
 - Handle login errors explicitly; do not read user fields after a failed call.
 - Local accounts and app IDs created manually disappear when the API restarts.
 
-For SDK changes, follow the [TDD workflow](../AGENTS.md#tdd-red--green--refactor).
+For SDK changes, follow the [TDD workflow](../fidj-brain/AGENTS.md#tdd-red--green--refactor).
