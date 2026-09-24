@@ -24,6 +24,14 @@ export interface IService {
         options?: ModuleServiceLoginCallOptionsInterface
     ): Promise<ClientUser>;
 
+    loginWithPasskey(
+        ticket: string,
+        response: any,
+        options?: ModuleServiceLoginCallOptionsInterface
+    ): Promise<ClientUser>;
+
+    passkeyLoginOptions(): Promise<{options: any; ticket: string}>;
+
     loginInDemoMode(options?: ModuleServiceLoginOptionsInterface): Promise<ClientUser>;
 
     // Convenience: init + login in one call

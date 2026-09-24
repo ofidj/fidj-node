@@ -104,6 +104,109 @@ export class Client {
         return false;
     }
 
+    // The three tokens a credential sign-in yields. The first is minted with the
+    // credential itself — a password or a passkey grant — and the other two
+    // with that first token, so the agreement rule applies once, to the
+    // person who is present.
+    private async mintTokens(
+        login: string,
+        authorization: string,
+        options?: {termsAccepted?: boolean; termsVersion?: string}
+    ): Promise<ClientTokens> {
+        this.setClientId(login); // login or createdUser.id or createdUser._id
+        const urlToken = this.URI + '/apps/' + this.appId + '/tokens';
+        const dataToken = {
+            grant_type: 'access_token',
+            termsAccepted: options?.termsAccepted,
+            termsVersion: options?.termsVersion,
+            // grant_type: 'client_credentials',
+            // client_id: this.clientId,
+            // client_secret: password,
+            client_udid: this.clientUuid,
+            client_info: this.clientInfo,
+            // audience: this.appId,
+            scope: JSON.stringify(this.sdk),
+        };
+        const headers = {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: authorization,
+        };
+        const createdAccessToken: ClientToken = (
+            await new Ajax().post({
+                url: urlToken,
+                data: dataToken,
+                headers,
+                timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
+            })
+        ).data.token;
+
+        dataToken.grant_type = 'id_token';
+        const createdIdToken: ClientToken = (
+            (await new Ajax().post({
+                url: urlToken,
+                data: dataToken,
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    Authorization: 'Bearer ' + createdAccessToken.data,
+                },
+                timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
+            })) as any
+        ).data.token;
+
+        dataToken.grant_type = 'refresh_token';
+        const createdRefreshToken: ClientToken = (
+            (await new Ajax().post({
+                url: urlToken,
+                data: dataToken,
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    Authorization: 'Bearer ' + createdAccessToken.data,
+                },
+                timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
+            })) as any
+        ).data.token;
+
+        return new ClientTokens(login, createdAccessToken, createdIdToken, createdRefreshToken);
+    }
+
+    // A passkey sign-in (v3 P1-4). The browser ran the ceremony against the
+    // options and ticket from POST /passkeys/options; the API checks the answer
+    // and hands back a short grant that stands in for the password.
+    public async loginWithPasskey(
+        ticket: string,
+        response: any,
+        options?: {termsAccepted?: boolean; termsVersion?: string}
+    ): Promise<ClientTokens> {
+        if (!this.URI) {
+            throw new FidjError(408, 'no-api-uri');
+        }
+        try {
+            const signedIn = (
+                (await new Ajax().post({
+                    url: this.URI + '/passkeys/login',
+                    data: {ticket, response},
+                    headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+                    timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
+                })) as any
+            ).data;
+            return await this.mintTokens(signedIn.username, 'Passkey ' + signedIn.grant, options);
+        } catch (e: any) {
+            if (e instanceof FidjError) {
+                throw e;
+            }
+            const code = typeof e?.code === 'number' ? e.code : 500;
+            const body = e?.message;
+            throw new FidjError(
+                code,
+                (typeof body?.message === 'string' && body.message) || 'passkey-login-failed',
+                body && typeof body === 'object' ? body : undefined
+            );
+        }
+    }
+
     public async login(
         login: string,
         password: string,
@@ -145,63 +248,11 @@ export class Client {
             }
             const createdUser: ClientUser = account.data.user;
 
-            this.setClientId(login); // login or createdUser.id or createdUser._id
-            const urlToken = this.URI + '/apps/' + this.appId + '/tokens';
-            const dataToken = {
-                grant_type: 'access_token',
-                termsAccepted: options?.termsAccepted,
-                termsVersion: options?.termsVersion,
-                // grant_type: 'client_credentials',
-                // client_id: this.clientId,
-                // client_secret: password,
-                client_udid: this.clientUuid,
-                client_info: this.clientInfo,
-                // audience: this.appId,
-                scope: JSON.stringify(this.sdk),
-            };
-            const headers = {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-                Authorization: 'Basic ' + tools.Base64.encode('' + login + ':' + password),
-            };
-            const createdAccessToken: ClientToken = (
-                await new Ajax().post({
-                    url: urlToken,
-                    data: dataToken,
-                    headers,
-                    timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
-                })
-            ).data.token;
-
-            dataToken.grant_type = 'id_token';
-            const createdIdToken: ClientToken = (
-                (await new Ajax().post({
-                    url: urlToken,
-                    data: dataToken,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Accept: 'application/json',
-                        Authorization: 'Bearer ' + createdAccessToken.data,
-                    },
-                    timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
-                })) as any
-            ).data.token;
-
-            dataToken.grant_type = 'refresh_token';
-            const createdRefreshToken: ClientToken = (
-                (await new Ajax().post({
-                    url: urlToken,
-                    data: dataToken,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Accept: 'application/json',
-                        Authorization: 'Bearer ' + createdAccessToken.data,
-                    },
-                    timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
-                })) as any
-            ).data.token;
-
-            return new ClientTokens(login, createdAccessToken, createdIdToken, createdRefreshToken);
+            return await this.mintTokens(
+                login,
+                'Basic ' + tools.Base64.encode('' + login + ':' + password),
+                options
+            );
         } catch (e: any) {
             this.logger.warn('Login impossible', e);
             // A refusal raised here already says what it means. Rebuilding it

@@ -814,6 +814,50 @@ export class FidjNodeService implements IService {
         await this.sendOnEndpoint({verb: 'POST', key: 'me', relativePath: 'resend-verification'});
     }
 
+    // Passkeys (v3 P1-4). The browser runs the WebAuthn ceremony with these
+    // options; the SDK only carries the HTTP side, so it stays usable in Node.
+    public async passkeyLoginOptions(): Promise<{options: any; ticket: string}> {
+        const endpoints = await this.connection.getApiEndpoints({filter: 'theBestOne'});
+        if (!endpoints || endpoints.length !== 1) {
+            throw new FidjError(400, 'No configured account API endpoint.');
+        }
+        const answer: any = await new Ajax().post({
+            url: endpoints[0].url.replace(/\/$/, '') + '/passkeys/options',
+            headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+            data: {},
+            timeout: FidjNodeService.DEFAULT_TIMEOUT_MS,
+        });
+        return answer.data;
+    }
+
+    // Signs in with the browser's answer to passkeyLoginOptions(), the way
+    // login() does with a password: same session, same agreement rule.
+    public async loginWithPasskey(
+        ticket: string,
+        response: any,
+        options?: ModuleServiceLoginCallOptionsInterface
+    ) {
+        if (!this.connection.isReady()) {
+            throw new FidjError(404, 'Need an initialized FidjService');
+        }
+        this.forgetProviderSession();
+        await this._removeAll();
+        await this._createSession(this.connection.fidjId);
+        await this.connection.logout();
+        const clientTokens = await this.connection
+            .getClient()
+            .loginWithPasskey(ticket, response, options);
+        await this.connection.setConnection(clientTokens);
+        if (this.sdk.useDB) {
+            try {
+                await this.session.sync(this.connection.getClientId());
+            } catch (e) {
+                this.logger.warn('fidj.sdk.service.loginWithPasskey: sync issue', e.toString());
+            }
+        }
+        return this.connection.getUser();
+    }
+
     private async accountPost(path: string, data: unknown): Promise<void> {
         const endpoints = await this.connection.getApiEndpoints({filter: 'theBestOne'});
         if (!endpoints || endpoints.length !== 1) {
