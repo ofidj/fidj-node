@@ -67,6 +67,24 @@ while this support is beta:
 - `beginLogin({prompt: 'login'})` forces a fresh credential check, for an app
   that wants one before a sensitive action.
 
+## Passkey sign-in (3.15.0)
+
+The browser runs the ceremony; the SDK carries the HTTP side, so it stays
+usable in Node.
+
+```ts
+const {options, ticket} = await sdk.passkeyLoginOptions();
+const response = await passkeyAssertion(options); // @ofidj/entry/dom
+await sdk.loginWithPasskey(ticket, response); // same session as login()
+```
+
+`loginWithPasskey` trades the answer for a two-minute grant, then mints the three
+tokens with `Authorization: Passkey <grant>` exactly as `login` does with a
+password — including the agreement rule: a `409 agreement_required` is answered
+by a second ceremony with `{termsAccepted: true, termsVersion}`. Adding and
+removing passkeys is plain `sendOnEndpoint({key: 'me', relativePath:
+'passkeys…'})` on a signed-in Fidj session.
+
 ## Explicit app agreement on login
 
 Call `login(email, password)` first. When the account owes this app its
