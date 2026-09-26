@@ -1,6 +1,6 @@
 {
   "name": "@ofidj/node",
-  "version": "3.17.0",
+  "version": "3.18.0",
   "author": "fidj",
   "description": "fidj node tools ",
   "keywords": [],
@@ -40,7 +40,7 @@
     "test-coverage": "nyc npm run test"
   },
   "dependencies": {
-    "@ofidj/contracts": "^3.17.0",
+    "@ofidj/contracts": "^3.18.0",
     "axios": "1.20.0",
     "base-64": "^1.0.0",
     "oauth4webapi": "3.8.2"
