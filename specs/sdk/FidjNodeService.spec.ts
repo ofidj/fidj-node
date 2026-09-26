@@ -508,6 +508,27 @@ describe('FidjNodeService', () => {
             });
     });
 
+    // A session the API no longer honours — revoked, expired, or from before
+    // the credentials changed — answers the refresh with 401. It is closed
+    // here and reported as a 401, the one code that means "sign in again": a
+    // 403 means an action was refused to somebody still signed in.
+    for (const code of [401, 403, 410]) {
+        it(`closes the session and reports 401 when the refresh is refused with ${code}`, async () => {
+            const srv = new FidjNodeService(_log, _q);
+            spy.on((srv as any).connection, 'refreshConnection', () =>
+                Promise.reject(new FidjError(code, 'refused'))
+            );
+            const logout = spy.on(srv, 'logout', () => Promise.resolve());
+            try {
+                await srv.sync({forceRefresh: true});
+                assert.fail('sync should have been refused');
+            } catch (err: any) {
+                expect(err.code).to.equal(401);
+            }
+            expect(logout).to.have.been.called.exactly(1);
+        });
+    }
+
     it('should sync KO : with a fail emptyFn', async () => {
         const srv = new FidjNodeService(_log, _q);
         (srv as any).connection.fidjId = 'mockedId';

@@ -486,10 +486,14 @@ export class FidjNodeService implements IService {
             this.logger.log('fidj.sdk.service.sync refreshConnection done. ');
         } catch (err) {
             this.logger.warn('fidj.sdk.service.sync refreshConnection failed : ', err);
-            if (err?.code === 403 || err?.code === 410) {
+            // The session is gone — revoked, expired, or from before the
+            // credentials changed. Closed here, and reported as a 401, the one
+            // code that means "sign in again": a 403 means an action was
+            // refused to somebody still signed in.
+            if (err?.code === 401 || err?.code === 403 || err?.code === 410) {
                 await this.logout(true);
             }
-            throw new FidjError(403, 'not connected');
+            throw new FidjError(401, 'not connected');
         }
 
         // if (!self.session.isReady()) {
