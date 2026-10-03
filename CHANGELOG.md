@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.20.0] - 2026-10-03
+
+- No change of its own: moves to the 3.20 series with contracts, entry,
+  generator, API and console.
+
 ## [3.7.3] - 2026-09-14
 
 - Release on the shared @ofidj version. The SDK version is what a generated app
