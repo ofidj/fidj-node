@@ -1,4 +1,4 @@
-import {Base64} from '../tools/Base64';
+import {Base64} from '../tools';
 import {FidjApiAppsMeDetailsResponse} from '@ofidj/contracts';
 
 export class SessionVerificationError extends Error {
