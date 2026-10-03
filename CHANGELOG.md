@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.21.0] - 2026-10-03
+
+- No change of its own: moves to the 3.21 series.
+
 ## [3.20.0] - 2026-10-03
 
 - No change of its own: moves to the 3.20 series with contracts, entry,
