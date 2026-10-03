@@ -427,6 +427,60 @@ describe('Connection', () => {
         });
     });
 
+    // When did an endpoint last answer yes? A "no" — an API that judges this SDK
+    // incompatible — is not a yes: it used to be recorded as one, so the SDK
+    // fell back to an endpoint as "the best old one" at the very moment it had
+    // just refused, and the stored state read as if it had been fine.
+    describe('Endpoint state', () => {
+        const store: any = {};
+        const _storage: any = {
+            get: (key) => store[key],
+            set: (key, value) => (store[key] = value),
+            remove: (key) => delete store[key],
+        };
+        const answer = (isOk: boolean) =>
+            spy.on(axios, 'get', () =>
+                Promise.resolve({status: 200, data: JSON.stringify({isOk})})
+            );
+        afterEach(() => spy.restore());
+
+        it('keeps the last time the API said yes when it says no', async () => {
+            const srv: any = new Connection(
+                {version: 'mock.sdk'} as any,
+                _storage,
+                new LoggerService(LoggerLevelEnum.NONE)
+            );
+            srv.states = {};
+            answer(true);
+            await srv.verifyApiState(1000, 'http://mock/api');
+            expect(srv.states['http://mock/api']).to.deep.equal({
+                state: true,
+                time: 1000,
+                lastTimeWasOk: 1000,
+            });
+            spy.restore();
+            answer(false);
+            await srv.verifyApiState(2000, 'http://mock/api');
+            expect(srv.states['http://mock/api']).to.deep.equal({
+                state: false,
+                time: 2000,
+                lastTimeWasOk: 1000,
+            });
+        });
+
+        it('has never been fine when its first answer is no', async () => {
+            const srv: any = new Connection(
+                {version: 'mock.sdk'} as any,
+                _storage,
+                new LoggerService(LoggerLevelEnum.NONE)
+            );
+            srv.states = {};
+            answer(false);
+            await srv.verifyApiState(3000, 'http://mock/other');
+            expect(srv.states['http://mock/other'].lastTimeWasOk).to.equal(0);
+        });
+    });
+
     xdescribe('Connection', () => {
         const _sdk: any = {version: 'mock.sdk'};
         const _storage: any = {

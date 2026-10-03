@@ -632,14 +632,13 @@ export class Connection {
                 })
             ).data;
 
-            let state = false;
-            if (data && data.isOk) {
-                state = true;
-            }
+            const state = Boolean(data && data.isOk);
+            // A "no" is an answer, not a success: the last time the endpoint
+            // said yes stays what it was.
             this.states[endpointUrl] = {
                 state: state,
                 time: currentTime,
-                lastTimeWasOk: currentTime,
+                lastTimeWasOk: state ? currentTime : this.states[endpointUrl]?.lastTimeWasOk || 0,
             };
 
             this._logger.log('fidj.sdk.connection.verifyApiState > states : ', this.states);
