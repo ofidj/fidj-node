@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.23.0] - 2026-10-04
+
+- No change of its own: moves to the 3.23 series, on @ofidj/contracts 3.23.0.
+
 ## [3.22.0] - 2026-10-04
 
 - No change of its own: moves to the 3.22 series, on @ofidj/contracts 3.22.0.
