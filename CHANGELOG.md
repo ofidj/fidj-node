@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.22.0] - 2026-10-04
+
+- No change of its own: moves to the 3.22 series, on @ofidj/contracts 3.22.0.
+
 ## [3.21.1] - 2026-10-03
 
 - An endpoint that answers "no" to `/status?isOk` keeps the last time it said
