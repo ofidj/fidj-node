@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.25.0] - 2026-10-04
+
+- The 3.25 series; no SDK behaviour change.
+
 ## [3.24.0] - 2026-10-04
 
 - Align with the 3.24 series and the new external-service contracts; no SDK behavior change.
