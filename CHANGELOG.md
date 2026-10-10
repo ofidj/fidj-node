@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.27.0] - 2026-10-10
+
+- The 3.27 series, on @ofidj/contracts 3.27.0; no SDK behaviour change.
+
 ## [3.26.0] - 2026-10-05
 
 - The 3.26 series; no SDK behaviour change.

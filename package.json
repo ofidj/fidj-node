@@ -1,6 +1,6 @@
 {
   "name": "@ofidj/node",
-  "version": "3.26.0",
+  "version": "3.27.0",
   "author": "fidj",
   "description": "fidj node tools ",
   "keywords": [],
@@ -19,13 +19,14 @@
   },
   "main": "./index.js",
   "types": "./index.d.ts",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "bp:_clean": "rm -rf package-lock.json node_modules .gen .logs .nyc_output .logs .output.txt .coverage .angular dist disti www && npm i",
+    "bp:_clean": "rm -rf package-lock.json node_modules .gen .logs .nyc_output .logs .output.txt .coverage .angular dist disti .sandbox-deps www && npm i",
     "bp:bump": "OLD_VERSION=\"v$(node -e \"console.log(require('./package.json').version)\")\" && VERSION=\"$(npm version patch --no-git-tag-version)\" && echo \"export const bpInfo = {version: '$VERSION'};\" > ./src/bpInfo.ts && git tag $OLD_VERSION && git checkout -b $VERSION && git push origin refs/heads/$VERSION:$VERSION --tags && git push --set-upstream origin $VERSION",
-    "version:sync": "node ./scripts/bp/sync-version.cjs",
     "bp:update-changelog-dates": "node ./scripts/bp/update-changelog-date.cjs",
     "bp:style:fix": "eslint 'src/**/*.ts' 'specs/**/*.ts' --fix --no-error-on-unmatched-pattern && eslint 'src/**/*.js' 'specs/**/*.js' --fix --no-error-on-unmatched-pattern && prettier --write \"src/**/*.ts\" --no-error-on-unmatched-pattern && prettier --write \"src/**/*.js\" --no-error-on-unmatched-pattern",
-    "bp:dead-code": "knip",
     "bp:use-local-deps": "node ./scripts/bp/switch-dependencies.cjs local && npm run bp:_clean",
     "bp:use-remote-deps": "node ./scripts/bp/switch-dependencies.cjs remote && npm run bp:_clean",
     "bp:branch:push": "BRANCH=$(git rev-parse --abbrev-ref HEAD) && git add . && (git diff-index --quiet HEAD && echo 'No changes to commit' || (git commit -m \"$BRANCH pushed\" && git push))",
@@ -33,6 +34,8 @@
     "bp:branch:check-before-release": "npm run bp:use-remote-deps && node ./scripts/bp/check-before-release.cjs",
     "bp:branch:last-push:main": "npm run bp:branch:push && npm run bp:branch:squash && BRANCH=$(git rev-parse --abbrev-ref HEAD) && git checkout main && git merge $BRANCH && git push",
     "bp:main:package": "git checkout package && git merge main -m \"$(git log -1 --pretty=%B main)\" && git push --set-upstream origin package && git checkout main",
+    "version:sync": "node ./scripts/bp/sync-version.cjs",
+    "bp:dead-code": "knip",
     "build": "npm run build-dist",
     "build-version": "VERSION=\"$(npm version patch --no-git-tag-version)\" && echo \"export const Fidj = {version: '$VERSION'}\" > src/module/Fidj.ts",
     "build-dist": "rm -rf dist/ && tsc --project tsconfig.json && cp *.md dist/ && cp package.json dist/",
@@ -40,7 +43,7 @@
     "test-coverage": "nyc npm run test"
   },
   "dependencies": {
-    "@ofidj/contracts": "^3.26.0",
+    "@ofidj/contracts": "^3.27.0",
     "axios": "1.20.0",
     "base-64": "^1.0.0",
     "oauth4webapi": "3.8.2"
@@ -68,8 +71,5 @@
     "prettier": "^3.5.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3"
-  },
-  "engines": {
-    "node": ">=22"
   }
 }

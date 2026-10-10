@@ -31,6 +31,30 @@ function execCommand(command, opts) {
     }
 }
 
+function refExists(ref) {
+    try {
+        execSync(`git show-ref --verify --quiet ${ref}`);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+// Prefer origin/main (fetched): a stale local main would squash far too much history
+function resolveBaseBranch() {
+    try {
+        execSync('git fetch --quiet origin', {stdio: 'ignore'});
+    } catch {
+        console.warn('Could not fetch origin, using the last known remote state.');
+    }
+    for (const name of ['main', 'master']) {
+        if (refExists(`refs/remotes/origin/${name}`)) return `origin/${name}`;
+        if (refExists(`refs/heads/${name}`)) return name;
+    }
+    console.error('No main or master branch found.');
+    process.exit(1);
+}
+
 // ZE Main function
 async function squashCommits() {
     try {
@@ -108,9 +132,8 @@ async function continueSquashing() {
             rootCommit = execCommand('git rev-list --max-parents=0 HEAD');
         } else {
             // For feature branches, find the commit where it diverged from main/master
-            const baseBranch = execCommand(
-                'git show-ref --verify --quiet refs/heads/main && echo "main" || echo "master"'
-            );
+            const baseBranch = resolveBaseBranch();
+            console.log(`Base branch: ${baseBranch}`);
             rootCommit = execCommand(`git merge-base ${currentBranch} ${baseBranch}`);
         }
 
